@@ -1,4 +1,3 @@
-# gamma_automator.py
 import time
 import platform
 import os
@@ -16,6 +15,15 @@ class GammaAutomator:
         load_dotenv()
 
         _options = webdriver.ChromeOptions()
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        download_dir = os.path.abspath(os.path.join(current_dir, "..", "data", "ppts"))
+        prefs = {
+            "download.default_directory": download_dir,
+            "download.prompt_for_download": False,
+            "download.directory_upgrade": True,
+            "safebrowsing.enabled": False,
+        }  # 다운로드 경로 설정
+        _options.add_experimental_option("prefs", prefs)  # ppt 다운로드 경로 설정
         _options.add_argument("disable-blink-features=AutomationControlled")
         _options.add_argument(
             "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.150 Safari/537.36"
@@ -199,3 +207,71 @@ class GammaAutomator:
         except Exception as e:
             print(f"Gamma 자동화 중 오류 발생: {e}")
             return False
+
+    def export_ppt(self):
+        try:
+            # 첫 번째 요소 클릭 - 내보내기 버튼
+            if self.element_click(
+                "/html/body/div[1]/div/div/div/div/div[1]/div[2]/button"
+            ):
+                print("내보내기 버튼 클릭 성공")
+                time.sleep(2)
+            else:
+                print("내보내기 버튼 클릭 실패")
+                return False
+
+            # 두 번째 요소 클릭 - PPT 옵션
+            if self.element_click("/html/body/div[41]/div/div/div[1]/button[5]"):
+                print("PPT 옵션 클릭 성공")
+                time.sleep(2)
+            else:
+                print("PPT 옵션 클릭 실패")
+                return False
+
+            # 세 번째 요소 클릭 - 다운로드 버튼
+            if self.element_click(
+                "/html/body/div[108]/div[3]/div/section/div/div[2]/div[2]/button[2]"
+            ):
+                print("다운로드 버튼 클릭 성공")
+                print("PPT 내보내기 완료!")
+                time.sleep(5)  # 다운로드 완료 대기
+                return True
+            else:
+                print("다운로드 버튼 클릭 실패")
+                return False
+
+        except Exception as e:
+            print(f"PPT 내보내기 중 오류 발생: {e}")
+            return False
+
+
+if __name__ == "__main__":
+    automator = GammaAutomator()
+
+    # 기존 URL 대신 테스트할 URL로 변경
+    automator.driver.get("https://gamma.app/docs/-v5d5rqhky711zrs?mode=doc")
+
+    print("브라우저가 지정된 URL로 이동했습니다.")
+    print("로그인이 필요하면 먼저 로그인을 수동으로 진행해주세요.")
+    print("준비가 완료되면 'start'를 입력하여 export_ppt 함수를 실행하세요.")
+
+    # 사용자 입력 대기
+    while True:
+        user_input = input("명령을 입력하세요 (start/quit): ").strip().lower()
+
+        if user_input == "start":
+            print("PPT 내보내기를 시작합니다...")
+            result = automator.export_ppt()
+
+            if result:
+                print("PPT 내보내기가 성공적으로 완료되었습니다.")
+            else:
+                print("PPT 내보내기 중 문제가 발생했습니다.")
+
+        elif user_input == "quit":
+            print("프로그램을 종료합니다.")
+            automator.driver.quit()
+            break
+
+        else:
+            print("유효한 명령이 아닙니다. 'start' 또는 'quit'을 입력해주세요.")
