@@ -83,6 +83,8 @@ class FlikiVideoGenerator:
             else:  # Windows, Linux
                 element.send_keys(Keys.CONTROL, "v")
 
+            time.sleep(1)
+
             print(f"요소 '{xpath}'에 텍스트 붙여넣기 성공")
             return True
 
@@ -102,76 +104,25 @@ class FlikiVideoGenerator:
         except Exception:
             return True
 
-    def email_pass(self, id, prev_step_button):
-        email_form_xpath = (
-            "/html/body/div/div[2]/div[2]/div/div[2]/div/form/div[1]/input"
-        )
-        next_button_xpath = (
-            "/html/body/div/div[2]/div[2]/div/div[2]/div/form/div[2]/button[1]"
-        )
-        email_cancel_button_xpath = (
-            "/html/body/div/div[2]/div[2]/div/div[2]/div/form/div[2]/button[2]"
-        )
-
-        if self.paste_text_to_element(
-            email_form_xpath,
-            id,
-        ):
-            while True:
-                if self.element_click(next_button_xpath):
-                    if self.element_check(next_button_xpath):
-                        break
-                    self.element_click(email_cancel_button_xpath)
-                    self.element_click(prev_step_button)
-
-        return next_button_xpath
-
-    def password_pass(self, id, pw, prev_step_button):
-        password_form_xpath = (
-            "/html/body/div/div[2]/div[2]/div/div[2]/div/form/div[2]/input"
-        )
-        submit_button_xpath = (
-            "/html/body/div/div[2]/div[2]/div/div[2]/div/form/div[3]/button[1]"
-        )
-        password_cancel_button_xpath = (
-            "/html/body/div/div[2]/div[2]/div/div[2]/div/form/div[3]/button[2]"
-        )
-
-        while True:
-            if self.paste_text_to_element(
-                password_form_xpath,
-                pw,
-            ):
-                if self.element_click(submit_button_xpath):
-                    if self.element_check(submit_button_xpath):
-                        break
-                    self.element_click(password_cancel_button_xpath)
-                    self.email_pass(id, prev_step_button)
-
     def login(self):
-        try:
-            fliki_id = os.getenv("FLIKI_ID")
-            fliki_pw = os.getenv("FLIKI_PW")
+        print("=" * 50)
+        print("Fliki.ai 웹사이트가 열렸습니다.")
+        print("수동으로 로그인을 진행해 주세요.")
+        print("로그인이 완료되면 아래에 'start'를 입력하세요.")
+        print("=" * 50)
 
-            if not fliki_id or not fliki_pw:
-                print("Error: 환경변수에 FLIKI_ID 또는 FLIKI_PW가 설정되지 않았습니다.")
+        # 사용자 입력 대기
+        user_input = ""
+        while user_input.lower() != "start":
+            user_input = input("로그인이 완료되었으면 'start'를 입력하세요: ")
+
+            if user_input.lower() == "exit":
+                self.driver.quit()
                 return False
 
-            continue_email_button_xpath = (
-                "/html/body/div/div[2]/div[2]/div/div[2]/button"
-            )
+        print("자동화 프로세스를 시작합니다.")
 
-            if self.element_click(continue_email_button_xpath):
-                pass
-
-            self.email_pass(fliki_id, continue_email_button_xpath)
-            self.password_pass(fliki_id, fliki_pw, continue_email_button_xpath)
-
-        except Exception as e:
-            print(f"login 함수 에러 발생: {e}")
-            return False
-
-        return True  # 로그인 시도 성공
+        return True
 
 
 if __name__ == "__main__":
