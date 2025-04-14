@@ -4,6 +4,7 @@ downloaded_files
 
 # Environments
 .env
+.venv
 
 # ppts
 /data/ppts
