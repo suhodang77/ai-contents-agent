@@ -8,7 +8,7 @@ class GeminiResponder:
     def __init__(
         self,
         api_key=None,
-        model_name="gemini-2.5-pro-exp-03-25",
+        model_name="gemini-2.0-flash-thinking-exp-01-21",
         temperature=1,
         top_p=0.95,
         top_k=64,
