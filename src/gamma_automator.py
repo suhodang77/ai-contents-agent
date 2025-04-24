@@ -2,37 +2,57 @@ import time
 import platform
 import os
 import pyperclip
+import subprocess
 from dotenv import load_dotenv
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from utils.selenium_utils import send_select_all_and_clear, element_click, paste_text_to_element
+from utils.selenium_utils import element_click, paste_text_to_element
 
 
 class GammaAutomator:
     def __init__(self):
         load_dotenv()
 
+        # Chrome 브라우저 실행
+        if platform.system() == "Darwin":  # macOS
+            chrome_path = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"  # 크롬 설치 경로
+        else:  # Windows
+            chrome_path = "C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"  # 크롬 설치 경로
+            
+        if os.path.exists(chrome_path):
+            subprocess.Popen([chrome_path, "--remote-debugging-port=9222"])
+            time.sleep(2)  # Chrome이 완전히 시작될 때까지 대기
+        else:
+            print("Chrome 브라우저를 찾을 수 없습니다. 수동으로 Chrome을 실행해주세요.")
+            return
+
+        # Chrome 옵션 설정
         _options = webdriver.ChromeOptions()
         current_dir = os.path.dirname(os.path.abspath(__file__))
         download_dir = os.path.abspath(os.path.join(current_dir, "..", "data", "ppts"))
-        prefs = {
-            "download.default_directory": download_dir,
-            "download.prompt_for_download": False,
-            "download.directory_upgrade": True,
-            "safebrowsing.enabled": False,
-        }  # 다운로드 경로 설정
-        _options.add_experimental_option("prefs", prefs)  # ppt 다운로드 경로 설정
-        _options.add_argument("disable-blink-features=AutomationControlled")
+        
+        # Chrome 옵션 설정
+        _options.add_experimental_option("debuggerAddress", "127.0.0.1:9222")
+        _options.add_argument("--disable-blink-features=AutomationControlled")
         _options.add_argument(
-            "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.150 Safari/537.36"
+            "--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.150 Safari/537.36"
         )
+        _options.add_argument("--disable-extensions")
+        _options.add_argument("--disable-popup-blocking")
+        _options.add_argument("--disable-infobars")
+        _options.add_argument("--disable-notifications")
+        _options.add_argument("--disable-gpu")
+        _options.add_argument("--no-sandbox")
+        _options.add_argument("--disable-dev-shm-usage")
+        _options.add_argument(f"--download.default_directory={download_dir}")
+        _options.add_argument("--download.prompt_for_download=false")
+        _options.add_argument("--download.directory_upgrade=true")
+        _options.add_argument("--safebrowsing.enabled=false")
 
-        _options.add_experimental_option("excludeSwitches", ["enable-automation"])
-        _options.add_experimental_option("useAutomationExtension", False)
-
+        # Chrome 드라이버 초기화
         self.driver = webdriver.Chrome(options=_options)
 
         self.driver.execute_script(
@@ -42,74 +62,28 @@ class GammaAutomator:
 
         self.driver.get("https://gamma.app/create/paste")
 
-    def element_click(self, xpath, timeout=10):
-        return element_click(self.driver, xpath, timeout)
-
-    def paste_text_to_element(self, xpath, text_to_paste, timeout=10):
-        return paste_text_to_element(self.driver, xpath, text_to_paste, timeout)
-
     def login(self):
-        try:
-            gamma_app_id = os.getenv("GAMMA_APP_ID")
-            gamma_app_pw = os.getenv("GAMMA_APP_PW")
+        # element_click(self.driver, '//*[@id="__next"]/div[2]/div[2]/div/div/div[3]/a[1]')
+        print("=" * 50)
+        print("Gamma.app 웹사이트가 열렸습니다.")
+        print("수동으로 로그인을 진행해 주세요.")
 
-            if not gamma_app_id or not gamma_app_pw:
-                print(
-                    "Error: 환경변수에 GAMMA_APP_ID 또는 GAMMA_APP_PW가 설정되지 않았습니다."
-                )
+        # 사용자 입력 대기
+        user_input = ""
+        while user_input.lower() != "start":
+            user_input = input("로그인이 완료되었으면 'start'를 입력하세요: ")
+
+            if user_input.lower() == "exit":
+                self.driver.quit()
                 return False
 
-            if self.paste_text_to_element('//*[@id="email"]', gamma_app_id):
-                time.sleep(1)
+        print("자동화 프로세스를 시작합니다.")
+        print("=" * 50)
 
-                if self.paste_text_to_element('//*[@id="password"]', gamma_app_pw):
-                    print("비밀번호 입력 성공")
-                    time.sleep(1)
-
-                    self.element_click(
-                        '//*[@id="__next"]/div[2]/div[2]/div[2]/div/div/div/form/div/div[4]/button'
-                    )
-                else:
-                    print("Error: 비밀번호 입력 실패")
-            else:
-                print("Error: 이메일 입력 실패")
-
-        except Exception as e:
-            print(f"login 함수 에러 발생: {e}")
-            return False  # 요소 로딩 실패 또는 기타 에러
-
-        return True  # 로그인 시도 성공
-
-    def check_login_failure(self):
-        driver = self.driver
-        try:
-            WebDriverWait(driver, 3).until(
-                EC.presence_of_element_located(
-                    (By.CSS_SELECTOR, "div[id^='field-'][id*='feedback']")
-                )
-            )
-            return True  # 로그인 실패
-        except:  # noqa: E722
-            return False  # 로그인 성공
+        return True
 
     def automate_gamma_ppt_creation(self, paste_content):
         try:
-            while True:
-                if not self.login():
-                    print(
-                        "로그인에 실패했습니다. .env 파일 설정을 확인하거나, 네트워크 환경을 점검해주세요."
-                    )
-                    return False
-                elif self.check_login_failure():
-                    print("로그인 실패. 다시 시도합니다.")
-                    time.sleep(2)
-                else:
-                    print("로그인 성공!")
-                    break
-
-            time.sleep(3)
-
-            # .tiptap 요소에 텍스트 붙여넣기
             if self.paste_text_to_element(
                 '//*[@id="main"]/div/div[2]/div[2]/div[2]/div/div/div[1]/div/div/div/div/div/div',
                 paste_content,
@@ -149,6 +123,7 @@ class GammaAutomator:
         try:
             # 첫 번째 요소 클릭 - 내보내기 버튼
             if self.element_click(
+                self.driver,
                 "/html/body/div[1]/div/div/div/div/div[1]/div[2]/button"
             ):
                 print("내보내기 버튼 클릭 성공")
@@ -158,7 +133,7 @@ class GammaAutomator:
                 return False
 
             # 두 번째 요소 클릭 - PPT 옵션
-            if self.element_click("/html/body/div[41]/div/div/div[1]/button[5]"):
+            if self.element_click(self.driver, "/html/body/div[41]/div/div/div[1]/button[5]"):
                 print("PPT 옵션 클릭 성공")
                 time.sleep(2)
             else:
@@ -167,6 +142,7 @@ class GammaAutomator:
 
             # 세 번째 요소 클릭 - 다운로드 버튼
             if self.element_click(
+                self.driver,
                 "/html/body/div[108]/div[3]/div/section/div/div[2]/div[2]/button[2]"
             ):
                 print("다운로드 버튼 클릭 성공")
@@ -184,6 +160,5 @@ class GammaAutomator:
 
 if __name__ == "__main__":
     automator = GammaAutomator()
-    while True:
-        if (input() == "start"):
-            break
+    automator.login()
+    

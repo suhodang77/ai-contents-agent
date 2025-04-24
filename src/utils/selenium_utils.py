@@ -35,6 +35,7 @@ def element_click(driver, xpath, timeout=10):
         bool: 클릭 성공 여부
     """
     try:
+        time.sleep(1)
         element = WebDriverWait(driver, timeout).until(
             EC.element_to_be_clickable((By.XPATH, xpath))
         )
