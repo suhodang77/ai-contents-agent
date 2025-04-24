@@ -50,6 +50,7 @@ if __name__ == "__main__":
 
             if gamma_automator.automate_gamma_ppt_creation(gemini_response_text):
                 print("\nGamma PPT 제작 자동화 성공!")
+                gamma_automator.export_ppt()
             else:
                 print("\nGamma PPT 제작 자동화 실패!")
         else:
