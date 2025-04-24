@@ -20,7 +20,7 @@ class GammaAutomator:
         if platform.system() == "Darwin":  # macOS
             chrome_path = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"  # 크롬 설치 경로
         else:  # Windows
-            chrome_path = "C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"  # 크롬 설치 경로
+            chrome_path = "C:\Program Files\Google\Chrome\Application\chrome.exe"  # 크롬 설치 경로
             
         if os.path.exists(chrome_path):
             subprocess.Popen([chrome_path, "--remote-debugging-port=9222"])
