@@ -64,6 +64,7 @@ def paste_text_to_element(driver, xpath, text_to_paste, timeout=10):
         bool: 텍스트 붙여넣기 성공 여부
     """
     try:
+        time.sleep(1)
         element = WebDriverWait(driver, timeout).until(
             EC.presence_of_element_located((By.XPATH, xpath))
         )

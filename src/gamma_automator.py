@@ -3,6 +3,7 @@ import platform
 import os
 import pyperclip
 import subprocess
+import shutil
 from dotenv import load_dotenv
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -19,9 +20,20 @@ class GammaAutomator:
         # Chrome 브라우저 실행
         if platform.system() == "Darwin":  # macOS
             chrome_path = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"  # 크롬 설치 경로
+            user_data_dir = os.path.expanduser("~/Library/Application Support/Google/Chrome")
         else:  # Windows
             chrome_path = "C:\Program Files\Google\Chrome\Application\chrome.exe"  # 크롬 설치 경로
+            user_data_dir = os.path.expanduser("~\\AppData\\Local\\Google\\Chrome\\User Data")
             
+        # # Chrome 프로필 디렉토리 삭제
+        # if os.path.exists(user_data_dir):
+        #     try:
+        #         shutil.rmtree(user_data_dir)
+        #         print("Chrome 프로필 디렉토리가 삭제되었습니다.")
+        #     except Exception as e:
+        #         print(f"Chrome 프로필 디렉토리 삭제 중 오류 발생: {e}")
+
+        # Chrome 브라우저 실행
         if os.path.exists(chrome_path):
             subprocess.Popen([chrome_path, "--remote-debugging-port=9222"])
             time.sleep(2)  # Chrome이 완전히 시작될 때까지 대기
@@ -55,15 +67,17 @@ class GammaAutomator:
         # Chrome 드라이버 초기화
         self.driver = webdriver.Chrome(options=_options)
 
-        self.driver.execute_script(
-            "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})"
-        )
+        # 쿠키 삭제
         self.driver.delete_all_cookies()
+        
+        # 로컬 스토리지 및 세션 스토리지 삭제
+        self.driver.execute_script("window.localStorage.clear();")
+        self.driver.execute_script("window.sessionStorage.clear();")
 
         self.driver.get("https://gamma.app/create/paste")
 
     def login(self):
-        # element_click(self.driver, '//*[@id="__next"]/div[2]/div[2]/div/div/div[3]/a[1]')
+        element_click(self.driver, '//*[@id="__next"]/div[2]/div[2]/div/div/div[3]/a[1]')
         print("=" * 50)
         print("Gamma.app 웹사이트가 열렸습니다.")
         print("수동으로 로그인을 진행해 주세요.")
@@ -81,6 +95,37 @@ class GammaAutomator:
         print("=" * 50)
 
         return True
+    
+    # def login(self):
+    #     try:
+    #         gamma_app_id = os.getenv("GAMMA_APP_ID")
+    #         gamma_app_pw = os.getenv("GAMMA_APP_PW")
+
+    #         if not gamma_app_id or not gamma_app_pw:
+    #             print(
+    #                 "Error: 환경변수에 GAMMA_APP_ID 또는 GAMMA_APP_PW가 설정되지 않았습니다."
+    #             )
+    #             return False
+
+    #         if paste_text_to_element(self.driver, '//*[@id="email"]', gamma_app_id):
+
+    #             if paste_text_to_element(self.driver, '//*[@id="password"]', gamma_app_pw):
+    #                 print("비밀번호 입력 성공")
+
+    #                 element_click(
+    #                     self.driver, 
+    #                     '//*[@id="__next"]/div[2]/div[2]/div[2]/div/div/div/form/div/div[4]/button'
+    #                 )
+    #             else:
+    #                 print("Error: 비밀번호 입력 실패")
+    #         else:
+    #             print("Error: 이메일 입력 실패")
+
+    #     except Exception as e:
+    #         print(f"login 함수 에러 발생: {e}")
+    #         return False  # 요소 로딩 실패 또는 기타 에러
+
+    #     return True  # 로그인 시도 성공
 
     def automate_gamma_ppt_creation(self, paste_content):
         try:
