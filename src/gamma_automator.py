@@ -1,15 +1,12 @@
 import time
 import platform
 import os
-import pyperclip
 import subprocess
 import shutil
 import json
 from dotenv import load_dotenv
 from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from utils.selenium_utils import element_click, paste_text_to_element
@@ -218,7 +215,8 @@ class GammaAutomator:
         # Gamma UI 변경으로 XPath가 달라질 수 있습니다. 필요시 업데이트하세요.
         # 현재는 20장 버튼이 기본 선택 상태일 수 있어, 클릭 대신 확인 로직 추가 고려
         card_count_button_xpath = "/html/body/div[1]/div/div/div/div[1]/div[4]/div/div[2]/div/div[1]/button[3]"
-        # element_click(self.driver, card_count_button_xpath) # 필요시에만 클릭
+        for i in range(8):
+            element_click(self.driver, card_count_button_xpath)
         print("카드 갯수 설정 단계 (현재는 클릭 생략, 필요시 주석 해제)")
         time.sleep(2)  # 설정 확인을 위한 잠시 대기
 
