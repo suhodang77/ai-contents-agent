@@ -1,151 +1,22 @@
 import time
-import platform
-import os
-import subprocess
-import shutil
-import json
-from dotenv import load_dotenv
-from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from utils.selenium_utils import element_click, paste_text_to_element
+from utils.selenium_setup import setup_selenium_driver
 
 
 class GammaAutomator:
     def __init__(self):
-        load_dotenv()
+        # load_dotenv() # Moved to setup_selenium_driver
 
-        current_script_dir = os.path.dirname(os.path.abspath(__file__))
-        user_data_dir_relative = os.path.join(
-            current_script_dir, "..", "data", "selenium-dev-profile"
+        self.driver = setup_selenium_driver(
+            download_subdir="pdfs", start_url="https://gamma.app/create/paste"
         )
-        selenium_user_data_dir = os.path.abspath(user_data_dir_relative)
-        download_dir = os.path.abspath(
-            os.path.join(current_script_dir, "..", "data", "pdfs")
-        )
-
-        # --- Preferences 파일 수정 로직 추가 ---
-        preferences_path = os.path.join(
-            selenium_user_data_dir, "Default", "Preferences"
-        )
-        default_dir_path = os.path.join(selenium_user_data_dir, "Default")
-
-        # Default 디렉토리가 없으면 생성
-        if not os.path.exists(default_dir_path):
-            os.makedirs(default_dir_path)
-
-        prefs_data = {}
-        try:
-            if os.path.exists(preferences_path):
-                with open(preferences_path, "r", encoding="utf-8") as f:
-                    prefs_data = json.load(f)
-            else:
-                print(
-                    f"알림: Preferences 파일({preferences_path})이 존재하지 않아 새로 생성합니다."
-                )
-
-            # download 설정 업데이트 (없으면 생성)
-            if "download" not in prefs_data:
-                prefs_data["download"] = {}
-            prefs_data["download"]["default_directory"] = download_dir
-            prefs_data["download"]["prompt_for_download"] = False
-            prefs_data["download"]["directory_upgrade"] = True
-
-            # safebrowsing 설정 업데이트 (없으면 생성)
-            if "safebrowsing" not in prefs_data:
-                prefs_data["safebrowsing"] = {}
-            prefs_data["safebrowsing"]["enabled"] = False
-
-            with open(preferences_path, "w", encoding="utf-8") as f:
-                json.dump(prefs_data, f, indent=4)  # 보기 좋게 indent 추가
-            print(f"Preferences 파일 업데이트 완료: {preferences_path}")
-
-        except json.JSONDecodeError:
-            print(
-                f"경고: Preferences 파일({preferences_path})이 유효한 JSON 형식이 아닙니다. 파일을 백업하고 새로 생성합니다."
-            )
-            try:
-                # 기존 파일 백업 (선택적)
-                shutil.move(preferences_path, preferences_path + ".bak")
-                print(
-                    f"기존 Preferences 파일을 {preferences_path}.bak 으로 백업했습니다."
-                )
-                # 기본 설정으로 새 파일 생성
-                prefs_data = {
-                    "download": {
-                        "default_directory": download_dir,
-                        "prompt_for_download": False,
-                        "directory_upgrade": True,
-                    },
-                    "safebrowsing": {"enabled": False},
-                }
-                with open(preferences_path, "w", encoding="utf-8") as f:
-                    json.dump(prefs_data, f, indent=4)
-                print(f"새로운 Preferences 파일을 생성했습니다: {preferences_path}")
-            except Exception as backup_err:
-                print(
-                    f"Preferences 파일 처리 중 심각한 오류 발생 (백업/재생성 실패): {backup_err}"
-                )
-                # 필요하다면 여기서 실행을 중단하거나 다른 오류 처리 로직 추가
-                return  # 또는 raise
-        except Exception as e:
-            print(f"Preferences 파일 처리 중 오류 발생: {e}")
-            # 필요하다면 여기서 실행을 중단하거나 다른 오류 처리 로직 추가
-            return  # 또는 raise
-        # --- Preferences 파일 수정 로직 끝 ---
-
-        # Chrome 브라우저 실행
-        if platform.system() == "Darwin":  # macOS
-            chrome_path = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"  # 크롬 설치 경로
-        else:  # Windows
-            chrome_path = "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"  # 크롬 설치 경로
-
-        if os.path.exists(chrome_path):
-            subprocess.Popen(
-                [
-                    chrome_path,
-                    "--remote-debugging-port=9222",
-                    f"--user-data-dir={selenium_user_data_dir}",
-                ]
-            )
-            time.sleep(2)  # Chrome이 완전히 시작될 때까지 대기
-        else:
-            print("Chrome 브라우저를 찾을 수 없습니다. 수동으로 Chrome을 실행해주세요.")
-            return
-
-        # Chrome 옵션 설정
-        _options = webdriver.ChromeOptions()
-
-        # Chrome 옵션 설정
-        _options.add_experimental_option("debuggerAddress", "127.0.0.1:9222")
-        _options.add_argument("--disable-blink-features=AutomationControlled")
-        _options.add_argument(
-            "--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.150 Safari/537.36"
-        )
-        _options.add_argument("--disable-extensions")
-        _options.add_argument("--disable-popup-blocking")
-        _options.add_argument("--disable-infobars")
-        _options.add_argument("--disable-notifications")
-        _options.add_argument("--disable-gpu")
-        _options.add_argument("--no-sandbox")
-        _options.add_argument("--disable-dev-shm-usage")
-        _options.add_argument(f"--download.default_directory={download_dir}")
-        _options.add_argument("--download.prompt_for_download=false")
-        _options.add_argument("--download.directory_upgrade=true")
-        _options.add_argument("--safebrowsing.enabled=false")
-
-        # Chrome 드라이버 초기화
-        self.driver = webdriver.Chrome(options=_options)
-
-        # 쿠키 삭제
-        self.driver.delete_all_cookies()
-
-        # 로컬 스토리지 및 세션 스토리지 삭제
-        self.driver.execute_script("window.localStorage.clear();")
-        self.driver.execute_script("window.sessionStorage.clear();")
-
-        self.driver.get("https://gamma.app/create/paste")
+        if not self.driver:
+            print("WebDriver 초기화 실패. GammaAutomator 인스턴스 생성 중단.")
+            # Optionally raise an exception or handle the failure appropriately
+            # raise RuntimeError("Failed to initialize WebDriver")
 
     def login(self):  # 수동 로그인
         print("=" * 50)
