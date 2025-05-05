@@ -16,16 +16,26 @@ class GeminiResponder:
         system_instruction="한국어로 답변해줘",
     ):
         """
-        GeminiResponder 클래스 초기화
+        GeminiResponder 클래스를 초기화합니다.
+
+        API 키 설정, 모델 파라미터 구성, 그리고 베이스 프롬프트를 로드합니다.
 
         Args:
-            api_key (str, optional): Google Gemini API 키. .env 파일에서 로드하지 않으려면 직접 전달. Defaults to None.
-            model_name (str, optional): 사용할 Gemini 모델 이름. Defaults to "gemini-2.0-flash-thinking-exp-01-21".
-            temperature (float, optional): 생성 모델의 temperature 설정. Defaults to 1.
-            top_p (float, optional): 생성 모델의 top_p 설정. Defaults to 0.95.
-            top_k (int, optional): 생성 모델의 top_k 설정. Defaults to 64.
-            max_output_tokens (int, optional): 생성 모델의 최대 출력 토큰 수. Defaults to 65536.
-            system_instruction (str, optional): Gemini 모델의 시스템 명령어. Defaults to "".
+            api_key (str, optional): Google Gemini API 키. 제공되지 않으면
+                                    `GEMINI_API_KEY` 환경 변수에서 로드합니다.
+                                    Defaults to None.
+            model_name (str, optional): 사용할 Gemini 모델의 이름.
+                                    Defaults to "gemini-2.5-flash-preview-04-17".
+            temperature (float, optional): 응답 생성 시 샘플링 온도를 제어합니다.
+                                        Defaults to 1.
+            top_p (float, optional): 응답 생성 시 누적 확률을 제어합니다.
+                                    Defaults to 0.95.
+            top_k (int, optional): 응답 생성 시 고려할 상위 토큰 수를 제어합니다.
+                                Defaults to 64.
+            max_output_tokens (int, optional): 생성될 응답의 최대 토큰 수.
+                                        Defaults to 65536.
+            system_instruction (str, optional): 모델에 제공할 시스템 수준의 명령어.
+                                            Defaults to "한국어로 답변해줘".
         """
         if not api_key:
             api_key = os.getenv("GEMINI_API_KEY")
@@ -44,12 +54,15 @@ class GeminiResponder:
 
     def _load_base_prompt(self):
         """
-        (내부 함수) 베이스 프롬프트 텍스트 파일을 로드합니다.
+        지정된 경로에서 베이스 프롬프트 텍스트 파일을 로드합니다.
+
+        내부적으로 사용되는 헬퍼 메서드입니다.
+
+        Returns:
+            str | None: 파일 내용을 문자열로 반환하거나, 파일 로드 실패 시 None을 반환합니다.
         """
         try:
-            with open(
-                self.BASE_PROMPT_FILE, "r", encoding="utf-8"
-            ) as f:  # UTF-8 인코딩 명시
+            with open(self.BASE_PROMPT_FILE, "r", encoding="utf-8") as f:
                 return f.read()
         except FileNotFoundError:
             print(
@@ -57,19 +70,21 @@ class GeminiResponder:
             )
             return None
 
-    def generate_response(self, summary_result):  # 요약 스크립트를 인자로 받음
+    def generate_response(self, summary_result):
         """
-        Google Gemini API를 사용하여 주어진 프롬프트에 대한 텍스트 응답을 생성합니다.
+        베이스 프롬프트와 주어진 요약 결과를 결합하여 Google Gemini API를 호출하고,
+        생성된 텍스트 응답을 반환합니다.
+
+        Args:
+            summary_result (str): 베이스 프롬프트에 추가될 요약 스크립트.
+
+        Returns:
+            str | None: Gemini API로부터 생성된 텍스트 응답 문자열.
+                        오류 발생 시 None을 반환합니다.
         """
-        if not self.base_prompt:  # 베이스 프롬프트 로드 실패 시 에러 처리
+        if not self.base_prompt:
             print("Error: 베이스 프롬프트를 로드하지 못했습니다.")
             return None
-
-        # 최종 프롬프트 조합 (베이스 프롬프트 + 요약 스크립트)
-        # prompt = self.base_prompt.replace(
-        #     "\n\n[유튜브 영상 요약 스크립트]",
-        #     summary_result,  # 베이스 프롬프트 템플릿에 요약 스크립트 삽입
-        # )
 
         prompt = f"{self.base_prompt}\n{summary_result}"
 
