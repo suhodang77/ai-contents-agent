@@ -7,7 +7,7 @@ import time
 
 
 class LilysSummarizer:
-    SUMMARIZED_URLS_FILE = "data/summarized_urls.json"
+    SUMMARIZED_URLS_FILE = "../data/summarized_urls.json"
 
     def __init__(self, api_key=None):
         """

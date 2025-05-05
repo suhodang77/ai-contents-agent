@@ -2,8 +2,8 @@ import time
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from utils.selenium_utils import element_click, paste_text_to_element
-from utils.selenium_setup import setup_selenium_driver
+from ..utils.selenium_utils import element_click, paste_text_to_element
+from ..utils.selenium_setup import setup_selenium_driver
 
 
 class GammaAutomator:

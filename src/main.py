@@ -1,8 +1,8 @@
 import os
 from dotenv import load_dotenv
-from lilys_summarizer import LilysSummarizer
-from gemini_responder import GeminiResponder
-from gamma_automator import GammaAutomator
+from modules.lilys_summarizer import LilysSummarizer
+from modules.gemini_responder import GeminiResponder
+from modules.gamma_automator import GammaAutomator
 
 if __name__ == "__main__":
     # .env 파일 로드

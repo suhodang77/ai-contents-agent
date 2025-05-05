@@ -3,7 +3,7 @@ import google.generativeai as genai
 
 
 class GeminiResponder:
-    BASE_PROMPT_FILE = "data/base_prompt.md"
+    BASE_PROMPT_FILE = "../data/base_prompt.md"
 
     def __init__(
         self,

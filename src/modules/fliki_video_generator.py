@@ -4,13 +4,13 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
-from utils.selenium_utils import (
+from ..utils.selenium_utils import (
     element_click,
     paste_text_to_element,
     upload_file_to_element,
     select_dropdown_option,
 )
-from utils.selenium_setup import setup_selenium_driver
+from ..utils.selenium_setup import setup_selenium_driver
 
 
 class FlikiVideoGenerator:
