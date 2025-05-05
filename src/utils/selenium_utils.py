@@ -1,3 +1,4 @@
+import os
 import platform
 import time
 import pyperclip
@@ -5,18 +6,20 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import Select
+from selenium.common.exceptions import NoSuchElementException, TimeoutException
 
 
 def send_select_all_and_clear(element):
     """
-    요소의 모든 텍스트를 선택하고 삭제합니다.
-    
+    Selenium WebElement의 모든 텍스트를 선택하고 삭제합니다.
+
     Args:
-        element: Selenium WebElement
+        element: 텍스트를 지울 Selenium WebElement.
     """
-    if platform.system() == "Darwin":  # macOS
+    if platform.system() == "Darwin":
         element.send_keys(Keys.COMMAND, "a")
-    else:  # Windows, Linux
+    else:
         element.send_keys(Keys.CONTROL, "a")
 
     element.send_keys(Keys.DELETE)
@@ -24,15 +27,17 @@ def send_select_all_and_clear(element):
 
 def element_click(driver, xpath, timeout=10):
     """
-    XPath를 사용하여 요소가 로딩되었는지 확인하고, 요소를 클릭합니다.
+    지정된 XPath를 사용하여 웹 요소를 찾아 클릭합니다.
+
+    요소가 클릭 가능해질 때까지 지정된 시간(timeout) 동안 기다립니다.
 
     Args:
-        driver: Selenium WebDriver 인스턴스
-        xpath: 클릭할 요소의 XPath
-        timeout: 대기 시간 (초), 기본값 10초
-        
+        driver: Selenium WebDriver 인스턴스.
+        xpath (str): 클릭할 요소의 XPath.
+        timeout (int, optional): 요소를 기다릴 최대 시간(초). 기본값은 10.
+
     Returns:
-        bool: 클릭 성공 여부
+        bool: 클릭에 성공하면 True, 그렇지 않으면 False.
     """
     try:
         time.sleep(1)
@@ -51,17 +56,18 @@ def element_click(driver, xpath, timeout=10):
 
 def paste_text_to_element(driver, xpath, text_to_paste, timeout=10):
     """
-    XPath를 사용하여 요소가 로딩되었는지 확인하고,
-    클립보드를 이용하여 텍스트를 붙여넣습니다.
+    지정된 XPath를 사용하여 웹 요소에 텍스트를 붙여넣습니다.
+
+    요소를 찾은 후, 기존 내용을 지우고 클립보드를 통해 새 텍스트를 붙여넣습니다.
 
     Args:
-        driver: Selenium WebDriver 인스턴스
-        xpath: 텍스트를 붙여넣을 요소의 XPath
-        text_to_paste: 붙여넣을 텍스트 문자열
-        timeout: 대기 시간 (초), 기본값 10초
+        driver: Selenium WebDriver 인스턴스.
+        xpath (str): 텍스트를 붙여넣을 요소의 XPath.
+        text_to_paste (str): 붙여넣을 텍스트.
+        timeout (int, optional): 요소를 기다릴 최대 시간(초). 기본값은 10.
 
     Returns:
-        bool: 텍스트 붙여넣기 성공 여부
+        bool: 텍스트 붙여넣기에 성공하면 True, 그렇지 않으면 False.
     """
     try:
         time.sleep(1)
@@ -71,11 +77,11 @@ def paste_text_to_element(driver, xpath, text_to_paste, timeout=10):
 
         send_select_all_and_clear(element)
 
-        pyperclip.copy(text_to_paste)  # 텍스트를 클립보드에 복사
-        element.click()  # 요소에 focus
-        if platform.system() == "Darwin":  # macOS
+        pyperclip.copy(text_to_paste)
+        element.click()
+        if platform.system() == "Darwin":
             element.send_keys(Keys.COMMAND, "v")
-        else:  # Windows, Linux
+        else:
             element.send_keys(Keys.CONTROL, "v")
 
         time.sleep(1)
@@ -88,4 +94,130 @@ def paste_text_to_element(driver, xpath, text_to_paste, timeout=10):
         return False
     except Exception as e:
         print(f"요소 '{xpath}'에 텍스트 붙여넣기 중 오류 발생: {e}")
-        return False 
+        return False
+
+
+def upload_file_to_element(
+    driver, trigger_xpath, file_input_xpath, file_path, timeout=15
+):
+    """
+    파일 업로드를 처리합니다. 필요한 경우 트리거 요소를 클릭한 후,
+    지정된 파일 입력 요소(<input type="file">)를 사용하여 파일을 업로드합니다.
+
+    Args:
+        driver: Selenium WebDriver 인스턴스.
+        trigger_xpath (str | None): 파일 입력을 표시하기 위해 클릭해야 할 요소의 XPath.
+                                    없으면 None.
+        file_input_xpath (str): 파일 경로를 받을 <input type="file"> 요소의 XPath.
+        file_path (str): 업로드할 파일의 절대 또는 상대 경로.
+        timeout (int, optional): 요소를 기다릴 최대 시간(초). 기본값은 15.
+
+    Returns:
+        bool: 파일 경로 전송에 성공하면 True, 그렇지 않으면 False.
+            (실제 업로드 완료가 아닌 경로 전송 성공 여부)
+    """
+    try:
+        abs_file_path = os.path.abspath(file_path)
+        if not os.path.exists(abs_file_path):
+            print(f"Error: File not found at {abs_file_path}")
+            return False
+        print(f"Attempting to upload file: {abs_file_path}")
+
+        if trigger_xpath:
+            print(f"Clicking trigger element: {trigger_xpath}")
+            if not element_click(driver, trigger_xpath, timeout=timeout):
+                print(
+                    f"Warning: Failed to click trigger element {trigger_xpath}, attempting upload anyway."
+                )
+            time.sleep(1)
+
+        print(f"Locating file input element: {file_input_xpath}")
+        file_input = WebDriverWait(driver, timeout).until(
+            EC.presence_of_element_located((By.XPATH, file_input_xpath))
+        )
+        print("File input element located. Sending file path...")
+        file_input.send_keys(abs_file_path)
+        print(f"File path '{abs_file_path}' sent to input element.")
+        time.sleep(2)
+        return True
+    except TimeoutException:
+        print(f"Error: File input element not found or timed out: {file_input_xpath}")
+        return False
+    except Exception as e:
+        print(f"Error uploading file using input {file_input_xpath}: {e}")
+        return False
+
+
+def select_dropdown_option(
+    driver, select_xpath, option_text=None, value=None, index=None, timeout=10
+):
+    """
+    드롭다운(<select> 요소)에서 옵션을 선택합니다.
+
+    옵션 텍스트, 값 또는 인덱스 중 하나를 기준으로 선택할 수 있습니다.
+
+    Args:
+        driver: Selenium WebDriver 인스턴스.
+        select_xpath (str): <select> 요소의 XPath.
+        option_text (str, optional): 선택할 옵션의 보이는 텍스트.
+        value (str, optional): 선택할 옵션의 value 속성 값.
+        index (int, optional): 선택할 옵션의 인덱스.
+        timeout (int, optional): 요소를 기다릴 최대 시간(초). 기본값은 10.
+
+    Returns:
+        bool: 옵션 선택에 성공하면 True, 그렇지 않으면 False.
+    """
+    try:
+        print(f"Attempting to select option in dropdown: {select_xpath}")
+        select_element = WebDriverWait(driver, timeout).until(
+            EC.element_to_be_clickable((By.XPATH, select_xpath))
+        )
+        select = Select(select_element)
+
+        selected = False
+        if option_text is not None:
+            print(f"Selecting by visible text: '{option_text}'")
+            select.select_by_visible_text(option_text)
+            selected = True
+        elif value is not None:
+            print(f"Selecting by value: '{value}'")
+            select.select_by_value(value)
+            selected = True
+        elif index is not None:
+            print(f"Selecting by index: {index}")
+            select.select_by_index(index)
+            selected = True
+        else:
+            print("Error: No selection criteria (text, value, or index) provided.")
+            return False
+
+        print("Dropdown option selected successfully.")
+        time.sleep(1)
+        return selected
+
+    except TimeoutException:
+        print(f"Error: Dropdown element not found or timed out: {select_xpath}")
+        return False
+    except NoSuchElementException:
+        criteria_str = (
+            f"text='{option_text}'"
+            if option_text
+            else f"value='{value}'"
+            if value
+            else f"index='{index}'"
+        )
+        print(
+            f"Error: Option not found in dropdown {select_xpath} (Criteria: {criteria_str})"
+        )
+        try:
+            options = [
+                f"'{opt.text}' (value='{opt.get_attribute('value')}')"
+                for opt in select.options
+            ]
+            print(f"Available options: {options}")
+        except Exception as debug_e:
+            print(f"Could not retrieve available options: {debug_e}")
+        return False
+    except Exception as e:
+        print(f"Error selecting dropdown {select_xpath}: {e}")
+        return False
