@@ -34,7 +34,7 @@ class FlikiVideoGenerator:
         )
         selenium_user_data_dir = os.path.abspath(user_data_dir_relative)
         download_dir = os.path.abspath(
-            os.path.join(current_script_dir, "..", "data", "pdfs")
+            os.path.join(current_script_dir, "..", "data", "videos")
         )
 
         preferences_path = os.path.join(
