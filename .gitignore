@@ -6,8 +6,8 @@ downloaded_files
 .env
 .venv
 
-# ppts
-/data/ppts
+# videos
+/data/videos
 
 # pdfs
 /data/pdfs
