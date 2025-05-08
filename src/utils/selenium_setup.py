@@ -22,17 +22,14 @@ def setup_selenium_driver(download_subdir: str, start_url: str):
     """
     load_dotenv()
 
-    # 경로는 이 함수의 위치(src/utils)를 기준으로 상대 경로를 계산합니다.
     current_script_dir = os.path.dirname(os.path.abspath(__file__))
-    project_root = os.path.abspath(
-        os.path.join(current_script_dir, "..", "..")
-    )  # src -> project root
-
-    user_data_dir_relative = os.path.join("data", "selenium-dev-profile")
-    selenium_user_data_dir = os.path.join(project_root, user_data_dir_relative)
-
-    download_dir_relative = os.path.join("data", download_subdir)
-    download_dir = os.path.join(project_root, download_dir_relative)
+    user_data_dir_relative = os.path.join(
+        current_script_dir, "..", "data", "selenium-dev-profile"
+    )
+    selenium_user_data_dir = os.path.abspath(user_data_dir_relative)
+    download_dir = os.path.abspath(
+        os.path.join(current_script_dir, "..", "data", download_subdir)
+    )
 
     preferences_path = os.path.join(selenium_user_data_dir, "Default", "Preferences")
     default_dir_path = os.path.join(selenium_user_data_dir, "Default")
@@ -86,11 +83,10 @@ def setup_selenium_driver(download_subdir: str, start_url: str):
             print(
                 f"Preferences 파일 처리 중 심각한 오류 발생 (백업/재생성 실패): {backup_err}"
             )
-            return None
+            return
     except Exception as e:
         print(f"Preferences 파일 처리 중 오류 발생: {e}")
-        return None
-
+        return
     if platform.system() == "Darwin":
         chrome_path = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
     else:
@@ -107,9 +103,10 @@ def setup_selenium_driver(download_subdir: str, start_url: str):
         time.sleep(2)
     else:
         print("Chrome 브라우저를 찾을 수 없습니다. 수동으로 Chrome을 실행해주세요.")
-        return None
+        return
 
-    _options = ChromeOptions()
+    _options = webdriver.ChromeOptions()
+
     _options.add_experimental_option("debuggerAddress", "127.0.0.1:9222")
     _options.add_argument("--disable-blink-features=AutomationControlled")
     _options.add_argument(
@@ -122,23 +119,18 @@ def setup_selenium_driver(download_subdir: str, start_url: str):
     _options.add_argument("--disable-gpu")
     _options.add_argument("--no-sandbox")
     _options.add_argument("--disable-dev-shm-usage")
-    # Note: Setting prefs via options is often more reliable than modifying the file directly
-    prefs = {
-        "download.default_directory": download_dir,
-        "download.prompt_for_download": False,
-        "download.directory_upgrade": True,
-        "safebrowsing.enabled": False,
-    }
-    _options.add_experimental_option("prefs", prefs)
+    _options.add_argument(f"--download.default_directory={download_dir}")
+    _options.add_argument("--download.prompt_for_download=false")
+    _options.add_argument("--download.directory_upgrade=true")
+    _options.add_argument("--safebrowsing.enabled=false")
 
-    try:
-        driver = webdriver.Chrome(options=_options)
-        driver.delete_all_cookies()
-        driver.execute_script("window.localStorage.clear();")
-        driver.execute_script("window.sessionStorage.clear();")
-        driver.get(start_url)
-        print(f"WebDriver 초기화 완료. 시작 URL: {start_url}")
-        return driver
-    except Exception as e:
-        print(f"WebDriver 초기화 중 오류 발생: {e}")
-        return None
+    driver = webdriver.Chrome(options=_options)
+
+    driver.delete_all_cookies()
+
+    # driver.execute_script("window.localStorage.clear();")
+    driver.execute_script("window.sessionStorage.clear();")
+
+    driver.get(start_url)
+    
+    return driver
