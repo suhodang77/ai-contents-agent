@@ -6,7 +6,6 @@ import shutil
 import subprocess
 from dotenv import load_dotenv
 from selenium import webdriver
-from selenium.webdriver.chrome.options import Options as ChromeOptions
 
 
 def setup_selenium_driver(download_subdir: str, start_url: str):
