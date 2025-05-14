@@ -23,11 +23,11 @@ def setup_selenium_driver(download_subdir: str, start_url: str):
 
     current_script_dir = os.path.dirname(os.path.abspath(__file__))
     user_data_dir_relative = os.path.join(
-        current_script_dir, "..", "data", "selenium-dev-profile"
+        current_script_dir, "..", "..", "data", "selenium-dev-profile"
     )
     selenium_user_data_dir = os.path.abspath(user_data_dir_relative)
     download_dir = os.path.abspath(
-        os.path.join(current_script_dir, "..", "data", download_subdir)
+        os.path.join(current_script_dir, "..", "..", "data", download_subdir)
     )
 
     preferences_path = os.path.join(selenium_user_data_dir, "Default", "Preferences")
