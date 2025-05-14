@@ -14,3 +14,6 @@ downloaded_files
 
 # selenium-dev-profile
 data/selenium-dev-profile
+
+# pycharm
+.idea
