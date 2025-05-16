@@ -4,6 +4,7 @@ import os
 import json
 import shutil
 import subprocess
+import socket
 from dotenv import load_dotenv
 from selenium import webdriver
 
@@ -89,17 +90,28 @@ def setup_selenium_driver(download_subdir: str, start_url: str):
     if platform.system() == "Darwin":
         chrome_path = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
     else:
-        chrome_path = "C:\Program Files\Google\Chrome\Application\chrome.exe"
+        chrome_path = (
+            "C:\\\\Program Files\\\\Google\\\\Chrome\\\\Application\\\\chrome.exe"
+        )
+
+    # 포트가 사용 중인지 확인하는 함수
+    def is_port_in_use(port: int) -> bool:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            return s.connect_ex(("localhost", port)) == 0
 
     if os.path.exists(chrome_path):
-        subprocess.Popen(
-            [
-                chrome_path,
-                "--remote-debugging-port=9222",
-                f"--user-data-dir={selenium_user_data_dir}",
-            ]
-        )
-        time.sleep(2)
+        if not is_port_in_use(9222):  # 9222 포트가 사용 중이 아닐 때만 실행
+            print("Chrome 브라우저를 새로 시작합니다 (디버깅 포트 9222).")
+            subprocess.Popen(
+                [
+                    chrome_path,
+                    "--remote-debugging-port=9222",
+                    f"--user-data-dir={selenium_user_data_dir}",
+                ]
+            )
+            time.sleep(2)  # 브라우저 시작 대기
+        else:
+            print("기존 Chrome 브라우저(디버깅 포트 9222)를 사용합니다.")
     else:
         print("Chrome 브라우저를 찾을 수 없습니다. 수동으로 Chrome을 실행해주세요.")
         return
@@ -131,5 +143,5 @@ def setup_selenium_driver(download_subdir: str, start_url: str):
     driver.execute_script("window.sessionStorage.clear();")
 
     driver.get(start_url)
-    
+
     return driver

@@ -39,14 +39,15 @@ def element_click(driver, xpath, timeout=10):
     Returns:
         bool: 클릭에 성공하면 True, 그렇지 않으면 False.
     """
+    sleep_time = 1
     try:
-        time.sleep(1)
+        time.sleep(sleep_time)
         element = WebDriverWait(driver, timeout).until(
             EC.element_to_be_clickable((By.XPATH, xpath))
         )
 
         element.click()
-        time.sleep(1)
+        time.sleep(sleep_time)
         return True
 
     except Exception as e:
@@ -69,8 +70,9 @@ def paste_text_to_element(driver, xpath, text_to_paste, timeout=10):
     Returns:
         bool: 텍스트 붙여넣기에 성공하면 True, 그렇지 않으면 False.
     """
+    sleep_time = 1
     try:
-        time.sleep(1)
+        time.sleep(sleep_time)
         element = WebDriverWait(driver, timeout).until(
             EC.presence_of_element_located((By.XPATH, xpath))
         )
@@ -84,7 +86,7 @@ def paste_text_to_element(driver, xpath, text_to_paste, timeout=10):
         else:
             element.send_keys(Keys.CONTROL, "v")
 
-        time.sleep(1)
+        time.sleep(sleep_time)
 
         print(f"요소 '{xpath}'에 텍스트 붙여넣기 성공")
         return True

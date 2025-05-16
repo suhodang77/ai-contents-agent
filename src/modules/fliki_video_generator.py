@@ -118,7 +118,7 @@ class FlikiVideoGenerator:
         upload_next_button_xpath = "/html/body/div[2]/div/div[3]/div/div/button"
         print(f"Next 버튼 클릭 시도: {upload_next_button_xpath}")
         try:
-            WebDriverWait(self.driver, 60).until(
+            WebDriverWait(self.driver, 120).until(
                 EC.element_to_be_clickable((By.XPATH, upload_next_button_xpath))
             )
         except TimeoutException:
@@ -144,7 +144,7 @@ class FlikiVideoGenerator:
         template_skip_button_xpath = "/html/body/div[2]/div/div[3]/div/div/button[2]"
         print(f"Skip 버튼 확인 및 클릭 시도: {template_skip_button_xpath}")
         try:
-            WebDriverWait(self.driver, 20).until(
+            WebDriverWait(self.driver, 120).until(
                 EC.element_to_be_clickable((By.XPATH, template_skip_button_xpath))
             )
             print("'Skip' 버튼 확인됨. 클릭합니다.")
@@ -207,7 +207,7 @@ class FlikiVideoGenerator:
         script_next_button_xpath = "/html/body/div[2]/div/div[3]/div/div/button[3]"
         print(f"Next 버튼 확인 및 클릭 시도: {script_next_button_xpath}")
         try:
-            WebDriverWait(self.driver, 20).until(
+            WebDriverWait(self.driver, 60).until(
                 EC.element_to_be_clickable((By.XPATH, script_next_button_xpath))
             )
             print("'Next' 버튼 확인됨. 클릭합니다.")
@@ -234,7 +234,7 @@ class FlikiVideoGenerator:
         submit_button_xpath = "/html/body/div[2]/div/div[3]/div/div/button[2]"
         print(f"Submit 버튼 확인 및 클릭 시도: {submit_button_xpath}")
         try:
-            WebDriverWait(self.driver, 30).until(
+            WebDriverWait(self.driver, 240).until(
                 EC.element_to_be_clickable((By.XPATH, submit_button_xpath))
             )
             print("'Submit' 버튼 확인됨. 클릭합니다.")
@@ -366,7 +366,7 @@ class FlikiVideoGenerator:
             bool: 최종 확인 버튼 클릭 (또는 자동 시작으로 인한 성공 추정) 여부.
         """
         try:
-            WebDriverWait(self.driver, 30).until(
+            WebDriverWait(self.driver, 3600).until(
                 EC.element_to_be_clickable((By.XPATH, xpath))
             )
             print(f"최종 확인 버튼 ({xpath}) 활성화됨. 클릭합니다.")

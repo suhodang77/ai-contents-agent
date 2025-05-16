@@ -3,8 +3,6 @@ import google.generativeai as genai
 
 
 class GeminiResponder:
-    BASE_PROMPT_FILE = "../data/base_prompt.md"
-
     def __init__(
         self,
         api_key=None,
@@ -50,6 +48,9 @@ class GeminiResponder:
         self.top_k = top_k
         self.max_output_tokens = max_output_tokens
         self.system_instruction = system_instruction
+        current_file_dir = os.path.dirname(os.path.abspath(__file__))
+        data_dir = os.path.join(current_file_dir, "..", "..", "data")
+        self.BASE_PROMPT_FILE = os.path.join(data_dir, "base_prompt.md")
         self.base_prompt = self._load_base_prompt()
 
     def _load_base_prompt(self):
@@ -108,9 +109,12 @@ class GeminiResponder:
         )
 
         chat_session = model.start_chat()
+        
+        print("\n[스크립트 생성 중]")
 
         try:
             response = chat_session.send_message(prompt)
+            print("[스크립트 생성 완료]")
             return response.text
         except Exception as e:
             print(f"Error during Gemini API call: {e}")

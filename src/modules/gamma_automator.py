@@ -1,7 +1,9 @@
 import time
+import os
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException
 from ..utils.selenium_utils import element_click, paste_text_to_element
 from ..utils.selenium_setup import setup_selenium_driver
 
@@ -79,15 +81,28 @@ class GammaAutomator:
             print("스크립트 붙여넣기 실패")
             return False
 
-        additional_button_1_xpath = "/html/body/div[1]/div/div/div/div[1]/div[2]/div[2]/div/div/div[2]/div/div/div[2]/button"
-        if not element_click(self.driver, additional_button_1_xpath):
-            print("추가된 버튼 1 클릭 실패")
+        page_style_dropdown_xpath = "/html/body/div[1]/div/div/div/div[1]/div[2]/div[2]/div/div/div[2]/div/div/div[2]/button"
+        if not element_click(self.driver, page_style_dropdown_xpath):
+            print("페이지 스타일 드롭다운 클릭 실패")
             return False
 
-        additional_button_2_xpath = "/html/body/div[5]/div[1]/div/div/button[2]"
-        if not element_click(self.driver, additional_button_2_xpath):
-            print("추가된 버튼 2 클릭 실패")
-            return False
+        general_button_xpath = "/html/body/div[5]/div[1]/div/div/button[2]"
+        if not element_click(self.driver, general_button_xpath):
+            print(
+                "XPath 기반 페이지 스타일 '일반적' 버튼 클릭 실패. 텍스트 기반으로 재시도..."
+            )
+            try:
+                # '일반적' 텍스트를 포함하는 버튼을 찾아서 클릭
+                general_button = WebDriverWait(self.driver, 5).until(
+                    EC.element_to_be_clickable(
+                        (By.XPATH, "//button[contains(., '일반적')]")
+                    )
+                )
+                general_button.click()
+                print("텍스트 기반 페이지 스타일 '일반적' 버튼 클릭 성공.")
+            except Exception as e:
+                print(f"텍스트 기반 페이지 스타일 '일반적' 버튼 클릭 실패: {e}")
+                return False
 
         continue_button_1_xpath = (
             "/html/body/div[1]/div/div/div/div[1]/div[2]/div[2]/div/div/div[3]/button"
@@ -110,11 +125,32 @@ class GammaAutomator:
             bool: 카드 설정 및 계속 진행 성공 여부.
         """
         print("2. 카드 설정 및 계속...")
-        card_count_button_xpath = "/html/body/div[1]/div/div/div/div[1]/div[4]/div/div[2]/div/div[1]/button[3]"
-        for i in range(8):
-            element_click(self.driver, card_count_button_xpath)
-        print("카드 갯수 설정 단계 (현재는 클릭 생략, 필요시 주석 해제)")
-        time.sleep(2)
+        # card_count_button_xpath = "/html/body/div[1]/div/div/div/div[1]/div[4]/div/div[2]/div/div[1]/button[3]"
+
+        # print("카드 갯수 설정 시도 중...")
+        # clicked_successfully_count = 0
+        # time.sleep(10)
+        # for i in range(8):  # 최대 8번 클릭 시도
+        #     try:
+        #         # 요소가 존재하는지 짧은 시간(예: 2초) 동안 확인
+        #         WebDriverWait(self.driver, 1).until(
+        #             EC.presence_of_element_located((By.XPATH, card_count_button_xpath))
+        #         )
+        #         # 요소가 존재하면 클릭 시도
+        #         if element_click(self.driver, card_count_button_xpath):
+        #             print(f"  시도 {i + 1}/8: 카드 카운트 버튼 클릭 성공.")
+        #             clicked_successfully_count += 1
+        #         else:
+        #             print(f"  시도 {i + 1}/8: 카드 카운트 버튼은 존재하지만 클릭 실패.")
+        #     except TimeoutException:
+        #         print(
+        #             f"  시도 {i + 1}/8: 카드 카운트 버튼({card_count_button_xpath})을 찾을 수 없어 클릭을 건너뜁니다."
+        #         )
+
+        # print(
+        #     f"카드 갯수 설정 완료: 총 {clicked_successfully_count}번 성공적으로 클릭됨."
+        # )
+        # time.sleep(2)  # 기존 로직의 time.sleep(2) 유지
 
         continue_button_2_xpath = "/html/body/div[1]/div/div/div/div[1]/div[4]/div/div[2]/div/div[2]/div/button"
         if not element_click(self.driver, continue_button_2_xpath):
@@ -194,7 +230,7 @@ class GammaAutomator:
         export_button_xpath = "/html/body/div[61]/div/div/div[1]/button[5]"
         if not element_click(self.driver, export_button_xpath):
             try:
-                export_button = WebDriverWait(self.driver, 3).until(
+                export_button = WebDriverWait(self.driver, 1).until(
                     EC.element_to_be_clickable(
                         (By.XPATH, "//button[contains(., '내보내기...')]")
                     )
@@ -211,22 +247,111 @@ class GammaAutomator:
         )
         if not element_click(self.driver, export_pdf_button_xpath):
             try:
-                export_pdf_button = WebDriverWait(self.driver, 3).until(
+                export_pdf_button = WebDriverWait(self.driver, 1).until(
                     EC.element_to_be_clickable(
                         (By.XPATH, "//button[contains(., 'PDF로 내보내기')]")
                     )
                 )
                 export_pdf_button.click()
-                time.sleep(5)
+                # time.sleep(5) # 기존 텍스트 기반 클릭 후 대기 시간 제거
                 print("PDF로 내보내기 버튼 클릭 (텍스트 기반)")
             except Exception as e:
                 print(f"PDF로 내보내기 버튼 클릭 실패: {e}")
                 return False
 
+        # PDF 내보내기 명령 후 상태 UI가 나타날 때까지 충분히 대기합니다.
+        time.sleep(10)
+
         print("PDF 내보내기 시작. 다운로드 폴더를 확인하세요.")
-        time.sleep(30)
-        print("PDF 내보내기 완료.")
-        return True
+
+        # PDF 생성 완료 상태를 기다립니다.
+        current_file_dir = os.path.dirname(os.path.abspath(__file__))
+        download_directory = os.path.join(
+            current_file_dir, "..", "..", "data", "pdfs"
+        )
+        max_wait_time_for_pdf = 3600  # PDF 생성 대기 시간 (초)
+
+        if self._wait_for_new_pdf_in_directory(
+            download_directory, max_wait_time_for_pdf
+        ):
+            print("추가 10초 대기 후 다음 작업을 진행합니다.")
+            time.sleep(3)  # PDF 파일 시스템 반영 및 안정화 대기
+            print("PDF 내보내기 완료.")
+            return True
+        else:
+            return False
+
+    def _wait_for_new_pdf_in_directory(
+        self, directory_path, max_wait_time, polling_interval=5
+    ):
+        """
+        지정된 디렉토리에 새 PDF 파일이 생성될 때까지 폴링합니다.
+
+        Args:
+            directory_path (str): 모니터링할 디렉토리 경로.
+            max_wait_time (int): 최대 대기 시간 (초).
+            polling_interval (int): 폴링 간격 (초).
+
+        Returns:
+            bool: 새 PDF 파일이 감지되면 True, 시간 초과 시 False.
+        """
+        print(
+            f"'{directory_path}' 디렉토리에서 새 PDF 파일 생성을 {polling_interval}초 간격으로 확인합니다 (최대 {max_wait_time}초)..."
+        )
+
+        if not os.path.isdir(directory_path):
+            print(
+                f"오류: 지정된 다운로드 디렉토리 '{directory_path}'를 찾을 수 없습니다."
+            )
+            return False
+
+        initial_pdf_files = {
+            f for f in os.listdir(directory_path) if f.lower().endswith(".pdf")
+        }
+        print(
+            f"  초기 PDF 파일 목록 (총 {len(initial_pdf_files)}개): {initial_pdf_files if initial_pdf_files else '없음'}"
+        )
+
+        start_time = time.time()
+        while time.time() - start_time < max_wait_time:
+            current_pdf_files = {
+                f for f in os.listdir(directory_path) if f.lower().endswith(".pdf")
+            }
+            newly_added_pdfs = current_pdf_files - initial_pdf_files
+
+            if newly_added_pdfs:
+                print(f"  새 PDF 파일 감지됨: {newly_added_pdfs}")
+                print("PDF 생성 완료 확인됨.")
+                return True
+
+            # 진행 상황을 더 자주 로깅 (예: 매 30초 또는 폴링 인터벌의 배수)
+            elapsed_time = int(time.time() - start_time)
+            if (
+                elapsed_time % (polling_interval * 6) == 0
+            ):  # 약 30초마다 로깅 (polling_interval이 5일때)
+                print(
+                    f"  새 PDF 파일 대기 중... (경과 시간: {elapsed_time}초 / {max_wait_time}초, 현재 PDF 수: {len(current_pdf_files)})"
+                )
+
+            time_left = max_wait_time - (time.time() - start_time)
+            if time_left <= 0:
+                break
+            actual_sleep = min(polling_interval, time_left)
+            time.sleep(actual_sleep)
+
+        print(
+            f"오류: {max_wait_time}초 내에 '{directory_path}' 디렉토리에서 새 PDF 파일이 감지되지 않았습니다."
+        )
+        current_pdf_files_on_timeout = {
+            f for f in os.listdir(directory_path) if f.lower().endswith(".pdf")
+        }
+        print(
+            f"  시간 초과 시점 PDF 파일 목록 (총 {len(current_pdf_files_on_timeout)}개): {current_pdf_files_on_timeout if current_pdf_files_on_timeout else '없음'}"
+        )
+        print(
+            "PDF 내보내기가 실패했거나 시간이 더 필요할 수 있습니다. Selenium 드라이버의 다운로드 경로 설정을 확인해주세요."
+        )
+        return False
 
     def create_ppt_from_script(self, script):
         """
