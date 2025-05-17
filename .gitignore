@@ -1,19 +1,1 @@
-# Byte-compiled / optimized / DLL files
-__pycache__/
-downloaded_files
-
-# Environments
 .env
-.venv
-
-# videos
-/data/videos
-
-# pdfs
-/data/pdfs
-
-# selenium-dev-profile
-data/selenium-dev-profile
-
-# pycharm
-.idea
