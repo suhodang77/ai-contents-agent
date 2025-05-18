@@ -9,6 +9,9 @@ from ..utils.selenium_utils import (
     paste_text_to_element,
     upload_file_to_element,
     select_dropdown_option,
+    chrome_focuse,
+    press_tab_multiple_times,
+    press_enter
 )
 from ..utils.selenium_setup import setup_selenium_driver
 
@@ -36,35 +39,51 @@ class FlikiVideoGenerator:
         Returns:
             bool: 로그인 성공 여부.
         """
-        print("=" * 50)
-        print("Fliki.ai 웹사이트가 열렸습니다.")
-        print("수동으로 로그인을 진행해 주세요.")
-        print("로그인 완료 및 다음 페이지 로딩을 기다립니다...")
-
-        login_complete_indicator_xpath = (
-            "/html/body/div/main/div/div/div/div/div/div[1]/div/button[4]"
-        )
         try:
-            WebDriverWait(self.driver, 300).until(
-                EC.presence_of_element_located(
-                    (By.XPATH, login_complete_indicator_xpath)
+            WebDriverWait(self.driver, 5).until(
+                EC.visibility_of_all_elements_located(
+                    (
+                        By.XPATH,
+                        "/html/body/div/div[2]/div[2]/div/button",
+                    )
                 )
             )
-            print("로그인 및 페이지 로딩 확인됨.")
-            print("자동화 프로세스를 시작합니다.")
-            print("=" * 50)
+            chrome_focuse(self.driver)
+            time.sleep(1)
+            press_tab_multiple_times(1)
+            press_enter()
+            time.sleep(2)
+            press_tab_multiple_times(2)
+            press_enter()
+            time.sleep(2)
+            press_tab_multiple_times(7)
+            press_enter()
             return True
-        except TimeoutError:
-            print("로그인 시간 초과 또는 페이지 로딩 실패.")
-            print("자동화 프로세스를 시작할 수 없습니다.")
-            print("=" * 50)
-            self.driver.quit()
-            return False
-        except Exception as e:
-            print(f"로그인 확인 중 오류 발생: {e}")
-            print("=" * 50)
-            self.driver.quit()
-            return False
+        except Exception as _:
+            login_complete_indicator_xpath = (
+                "/html/body/div/main/div/div/div/div/div/div[1]/div/button[4]"
+            )
+            try:
+                WebDriverWait(self.driver, 300).until(
+                    EC.presence_of_element_located(
+                        (By.XPATH, login_complete_indicator_xpath)
+                    )
+                )
+                print("로그인 및 페이지 로딩 확인됨.")
+                print("자동화 프로세스를 시작합니다.")
+                print("=" * 50)
+                return True
+            except TimeoutError:
+                print("로그인 시간 초과 또는 페이지 로딩 실패.")
+                print("자동화 프로세스를 시작할 수 없습니다.")
+                print("=" * 50)
+                self.driver.quit()
+                return False
+            except Exception as e:
+                print(f"로그인 확인 중 오류 발생: {e}")
+                print("=" * 50)
+                self.driver.quit()
+                return False
 
     def _handle_upload_step(self, ppt_file_path, user_level_info):
         """
@@ -448,10 +467,6 @@ if __name__ == "__main__":
     generator = FlikiVideoGenerator()
     if generator.driver:
         if generator.login():
-            ppt_file = os.path.abspath(os.path.join("data", "pdfs", "AI.pdf"))
-            if os.path.exists(ppt_file):
-                generator.generate_video_from_ppt(ppt_file_path=ppt_file)
-            else:
-                print(f"오류: 예제 PPT 파일({ppt_file})을 찾을 수 없습니다.")
+            print("로그인 성공")
     else:
         print("FlikiVideoGenerator 초기화 실패.")
