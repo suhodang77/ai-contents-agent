@@ -1,6 +1,7 @@
 import os
 import platform
 import time
+import pyautogui
 import pyperclip
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
@@ -223,3 +224,17 @@ def select_dropdown_option(
     except Exception as e:
         print(f"Error selecting dropdown {select_xpath}: {e}")
         return False
+
+
+def press_tab_multiple_times(count):
+    """Press the Tab key multiple times using pyautogui."""
+    print(f"Tab 키를 {count}번 누릅니다.")
+    for _ in range(count):
+        pyautogui.press("tab")
+        time.sleep(0.2)
+
+
+def press_enter():
+    """Press the Enter key using pyautogui."""
+    print("Enter 키를 누릅니다.")
+    pyautogui.press("enter")

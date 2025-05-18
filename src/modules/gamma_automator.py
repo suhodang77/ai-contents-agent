@@ -3,8 +3,7 @@ import os
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException
-from ..utils.selenium_utils import element_click, paste_text_to_element
+from ..utils.selenium_utils import element_click, paste_text_to_element, press_tab_multiple_times, press_enter
 from ..utils.selenium_setup import setup_selenium_driver
 
 
@@ -32,35 +31,51 @@ class GammaAutomator:
         Returns:
             bool: 로그인 성공 여부.
         """
-        print("=" * 50)
-        print("Gamma.app 웹사이트가 열렸습니다.")
-        print("수동으로 로그인을 진행해 주세요.")
-        print("로그인 완료 및 다음 페이지 로딩을 기다립니다...")
+        # print("=" * 50)
+        # print("Gamma.app 웹사이트가 열렸습니다.")
+        # print("수동으로 로그인을 진행해 주세요.")
+        # print("로그인 완료 및 다음 페이지 로딩을 기다립니다...")
 
-        login_complete_indicator_xpath = (
-            "/html/body/div[1]/div/div/div/div[1]/div[2]/div[1]/h2[1]"
-        )
-        try:
-            WebDriverWait(self.driver, 300).until(
-                EC.presence_of_element_located(
-                    (By.XPATH, login_complete_indicator_xpath)
+        # login_complete_indicator_xpath = (
+        #     "/html/body/div[1]/div/div/div/div[1]/div[2]/div[1]/h2[1]"
+        # )
+        # try:
+        #     WebDriverWait(self.driver, 300).until(
+        #         EC.presence_of_element_located(
+        #             (By.XPATH, login_complete_indicator_xpath)
+        #         )
+        #     )
+        #     print("로그인 및 페이지 로딩 확인됨.")
+        #     print("자동화 프로세스를 시작합니다.")
+        #     print("=" * 50)
+        #     return True
+        # except TimeoutError:
+        #     print("로그인 시간 초과 또는 페이지 로딩 실패.")
+        #     print("자동화 프로세스를 시작할 수 없습니다.")
+        #     print("=" * 50)
+        #     self.driver.quit()
+        #     return False
+        # except Exception as e:
+        #     print(f"로그인 확인 중 오류 발생: {e}")
+        #     print("=" * 50)
+        #     self.driver.quit()
+        #     return False
+        
+        element = WebDriverWait(self.driver, 10).until(
+            EC.visibility_of_all_elements_located(
+                (
+                    By.XPATH,
+                    "/html/body/div[1]/div[2]/div[2]/div[2]/div/div/div/form/div/div[1]/button",
                 )
             )
-            print("로그인 및 페이지 로딩 확인됨.")
-            print("자동화 프로세스를 시작합니다.")
-            print("=" * 50)
-            return True
-        except TimeoutError:
-            print("로그인 시간 초과 또는 페이지 로딩 실패.")
-            print("자동화 프로세스를 시작할 수 없습니다.")
-            print("=" * 50)
-            self.driver.quit()
-            return False
-        except Exception as e:
-            print(f"로그인 확인 중 오류 발생: {e}")
-            print("=" * 50)
-            self.driver.quit()
-            return False
+        )
+        
+        if element:
+            time.sleep(1)
+            press_tab_multiple_times(2)
+            press_enter()
+        else:
+            print("요소를 찾지 못했습니다.")
 
     def _paste_script_and_continue(self, script):
         """
@@ -388,32 +403,6 @@ class GammaAutomator:
 if __name__ == "__main__":
     automator = GammaAutomator()
     if hasattr(automator, "driver"):
-        example_script = """
-        # AI Contents Agent 개발
-
-        ## 프로젝트 목표
-        - 주어진 스크립트를 기반으로 자동으로 PPT 콘텐츠 생성
-        - 다양한 AI 모델(Gamma, Tome 등) 연동 지원
-        - 사용자 친화적인 인터페이스 제공
-
-        ## 주요 기능
-        1. 스크립트 입력 및 분석
-        2. AI 모델 선택 및 API 연동
-        3. PPT 생성 자동화 (Selenium 활용)
-        4. 생성된 PPT 편집 및 관리
-        5. 결과물 내보내기 (PDF, PPTX)
-
-        ## 기술 스택
-        - Python, Selenium, FastAPI
-        - OpenAI API, Gamma/Tome 등
-        - HTML/CSS/JavaScript (프론트엔드)
-
-        ## 기대 효과
-        - 콘텐츠 제작 시간 단축
-        - 아이디어 구체화 및 시각화 지원
-        - 반복 작업 자동화를 통한 생산성 향상
-        """
         automator.login()
-        automator.create_ppt_from_script(example_script)
     else:
         print("GammaAutomator 초기화 실패")
