@@ -234,7 +234,39 @@ def press_tab_multiple_times(count):
         time.sleep(0.2)
 
 
+def press_shift_tab_multiple_times(count):
+    """Press the Shift + Tab key multiple times using pyautogui."""
+    print(f"Shift + Tab 키를 {count}번 누릅니다.")
+    for _ in range(count):
+        try:
+            pyautogui.keyDown("shift")
+            pyautogui.press("tab")
+            pyautogui.keyUp("shift")
+
+        except Exception as e:
+            print(f"Shift+Tab 실행 중 오류 발생: {e}")
+            pyautogui.keyUp("shift")
+
+
 def press_enter():
     """Press the Enter key using pyautogui."""
     print("Enter 키를 누릅니다.")
     pyautogui.press("enter")
+
+
+def chrome_focuse(driver):
+    main_window_handle = driver.current_window_handle
+
+    # Chrome 창으로 포커스 맞추기
+    try:
+        print("Chrome 창으로 포커스 시도 (JavaScript)...")
+        driver.switch_to.window(
+            main_window_handle
+        )  # Selenium에게 해당 창을 다시 인지시킴
+        driver.execute_script("window.focus();")  # JavaScript로 브라우저 창 포커스
+        # 추가적으로 창을 앞으로 가져오는 JavaScript (항상 작동하지 않을 수 있음)
+        # driver.execute_script("window.open('','_self').close(); window.focus();") # 약간의 트릭
+        print("포커스 시도 완료.")
+        time.sleep(1)  # 포커스가 실제로 적용될 시간
+    except Exception as e:
+        print(f"JavaScript로 포커스 맞추기 실패: {e}")

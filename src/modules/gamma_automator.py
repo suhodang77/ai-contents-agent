@@ -3,7 +3,8 @@ import os
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from ..utils.selenium_utils import element_click, paste_text_to_element, press_tab_multiple_times, press_enter
+from selenium.common.exceptions import TimeoutException
+from ..utils.selenium_utils import element_click, paste_text_to_element, press_shift_tab_multiple_times, press_enter, chrome_focuse
 from ..utils.selenium_setup import setup_selenium_driver
 
 
@@ -31,51 +32,45 @@ class GammaAutomator:
         Returns:
             bool: 로그인 성공 여부.
         """
-        # print("=" * 50)
-        # print("Gamma.app 웹사이트가 열렸습니다.")
-        # print("수동으로 로그인을 진행해 주세요.")
-        # print("로그인 완료 및 다음 페이지 로딩을 기다립니다...")
-
-        # login_complete_indicator_xpath = (
-        #     "/html/body/div[1]/div/div/div/div[1]/div[2]/div[1]/h2[1]"
-        # )
-        # try:
-        #     WebDriverWait(self.driver, 300).until(
-        #         EC.presence_of_element_located(
-        #             (By.XPATH, login_complete_indicator_xpath)
-        #         )
-        #     )
-        #     print("로그인 및 페이지 로딩 확인됨.")
-        #     print("자동화 프로세스를 시작합니다.")
-        #     print("=" * 50)
-        #     return True
-        # except TimeoutError:
-        #     print("로그인 시간 초과 또는 페이지 로딩 실패.")
-        #     print("자동화 프로세스를 시작할 수 없습니다.")
-        #     print("=" * 50)
-        #     self.driver.quit()
-        #     return False
-        # except Exception as e:
-        #     print(f"로그인 확인 중 오류 발생: {e}")
-        #     print("=" * 50)
-        #     self.driver.quit()
-        #     return False
-        
-        element = WebDriverWait(self.driver, 10).until(
-            EC.visibility_of_all_elements_located(
-                (
-                    By.XPATH,
-                    "/html/body/div[1]/div[2]/div[2]/div[2]/div/div/div/form/div/div[1]/button",
+        try:
+            WebDriverWait(self.driver, 5).until(
+                EC.visibility_of_all_elements_located(
+                    (
+                        By.XPATH,
+                        "/html/body/div[1]/div[2]/div[2]/div[2]/div/div/div/form/div/div[1]/button",
+                    )
                 )
             )
-        )
-        
-        if element:
+            chrome_focuse(self.driver)
             time.sleep(1)
-            press_tab_multiple_times(2)
+            press_shift_tab_multiple_times(1)
             press_enter()
-        else:
-            print("요소를 찾지 못했습니다.")
+            return True
+        except Exception as _:
+            login_complete_indicator_xpath = (
+                "/html/body/div[1]/div/div/div/div[1]/div[2]/div[1]/h2[1]"
+            )
+            try:
+                WebDriverWait(self.driver, 300).until(
+                    EC.presence_of_element_located(
+                        (By.XPATH, login_complete_indicator_xpath)
+                    )
+                )
+                print("로그인 및 페이지 로딩 확인됨.")
+                print("자동화 프로세스를 시작합니다.")
+                print("=" * 50)
+                return True
+            except TimeoutError:
+                print("로그인 시간 초과 또는 페이지 로딩 실패.")
+                print("자동화 프로세스를 시작할 수 없습니다.")
+                print("=" * 50)
+                self.driver.quit()
+                return False
+            except Exception as e:
+                print(f"로그인 확인 중 오류 발생: {e}")
+                print("=" * 50)
+                self.driver.quit()
+                return False
 
     def _paste_script_and_continue(self, script):
         """
@@ -140,32 +135,32 @@ class GammaAutomator:
             bool: 카드 설정 및 계속 진행 성공 여부.
         """
         print("2. 카드 설정 및 계속...")
-        # card_count_button_xpath = "/html/body/div[1]/div/div/div/div[1]/div[4]/div/div[2]/div/div[1]/button[3]"
+        card_count_button_xpath = "/html/body/div[1]/div/div/div/div[1]/div[4]/div/div[2]/div/div[1]/button[3]"
 
-        # print("카드 갯수 설정 시도 중...")
-        # clicked_successfully_count = 0
-        # time.sleep(10)
-        # for i in range(8):  # 최대 8번 클릭 시도
-        #     try:
-        #         # 요소가 존재하는지 짧은 시간(예: 2초) 동안 확인
-        #         WebDriverWait(self.driver, 1).until(
-        #             EC.presence_of_element_located((By.XPATH, card_count_button_xpath))
-        #         )
-        #         # 요소가 존재하면 클릭 시도
-        #         if element_click(self.driver, card_count_button_xpath):
-        #             print(f"  시도 {i + 1}/8: 카드 카운트 버튼 클릭 성공.")
-        #             clicked_successfully_count += 1
-        #         else:
-        #             print(f"  시도 {i + 1}/8: 카드 카운트 버튼은 존재하지만 클릭 실패.")
-        #     except TimeoutException:
-        #         print(
-        #             f"  시도 {i + 1}/8: 카드 카운트 버튼({card_count_button_xpath})을 찾을 수 없어 클릭을 건너뜁니다."
-        #         )
+        print("카드 갯수 설정 시도 중...")
+        clicked_successfully_count = 0
+        time.sleep(10)
+        for i in range(8):  # 최대 8번 클릭 시도
+            try:
+                # 요소가 존재하는지 짧은 시간(예: 2초) 동안 확인
+                WebDriverWait(self.driver, 1).until(
+                    EC.presence_of_element_located((By.XPATH, card_count_button_xpath))
+                )
+                # 요소가 존재하면 클릭 시도
+                if element_click(self.driver, card_count_button_xpath):
+                    print(f"  시도 {i + 1}/8: 카드 카운트 버튼 클릭 성공.")
+                    clicked_successfully_count += 1
+                else:
+                    print(f"  시도 {i + 1}/8: 카드 카운트 버튼은 존재하지만 클릭 실패.")
+            except TimeoutException:
+                print(
+                    f"  시도 {i + 1}/8: 카드 카운트 버튼({card_count_button_xpath})을 찾을 수 없어 클릭을 건너뜁니다."
+                )
 
-        # print(
-        #     f"카드 갯수 설정 완료: 총 {clicked_successfully_count}번 성공적으로 클릭됨."
-        # )
-        # time.sleep(2)  # 기존 로직의 time.sleep(2) 유지
+        print(
+            f"카드 갯수 설정 완료: 총 {clicked_successfully_count}번 성공적으로 클릭됨."
+        )
+        time.sleep(2)  # 기존 로직의 time.sleep(2) 유지
 
         continue_button_2_xpath = "/html/body/div[1]/div/div/div/div[1]/div[4]/div/div[2]/div/div[2]/div/button"
         if not element_click(self.driver, continue_button_2_xpath):
@@ -403,6 +398,6 @@ class GammaAutomator:
 if __name__ == "__main__":
     automator = GammaAutomator()
     if hasattr(automator, "driver"):
-        automator.login()
+        print(automator.login())
     else:
         print("GammaAutomator 초기화 실패")
