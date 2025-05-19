@@ -12,6 +12,9 @@ downloaded_files
 # pdfs
 /data/pdfs
 
+# generated_script
+/data/generated_texts
+
 # selenium-dev-profile
 data/selenium-dev-profile
 
