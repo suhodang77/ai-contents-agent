@@ -11,6 +11,11 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import Select
 
 
+"""
+ 현재 셀레니움에서 입력하는 아이디와 비밀번호 변수 이름을 
+  GOOGLE_EMAIL 과 GOOGLE_PASSWORD 로 설정해두었다.
+"""
+
 class FlikiLogin:
     def __init__(self):
         # 환경 변수 로드
