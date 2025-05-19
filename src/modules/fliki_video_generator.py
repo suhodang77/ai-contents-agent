@@ -1,5 +1,4 @@
 import time
-import os
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -11,7 +10,8 @@ from ..utils.selenium_utils import (
     select_dropdown_option,
     chrome_focuse,
     press_tab_multiple_times,
-    press_enter
+    press_enter,
+    slider_drag,
 )
 from ..utils.selenium_setup import setup_selenium_driver
 
@@ -120,6 +120,13 @@ class FlikiVideoGenerator:
             self.driver, user_info_textarea_xpath, user_level_info
         ):
             print("경고: 사용자 정보 입력 실패. 계속 진행합니다.")
+            
+        slider_drag(
+            driver=self.driver,
+            slider_xpath="/html/body/div[2]/div/div[2]/div/div[2]/div/span/span[1]",
+            thumb_xpath="/html/body/div[2]/div/div[2]/div/div[2]/div/span/span[2]/span",
+            target_value=15,
+        )
 
         file_input_xpath = "/html/body/div[2]/div/div[2]/div/div[3]/div/input"
         print("PPT 파일 업로드 시도...")
@@ -408,7 +415,7 @@ class FlikiVideoGenerator:
             print(f"오류: 최종 확인 버튼 ({xpath}) 처리 중 예상치 못한 오류 발생: {e}")
             return False
 
-    def generate_video_from_ppt(self, ppt_file_path, user_level_info="Beginner"):
+    def generate_video_from_ppt(self, ppt_file_path, prompt):
         """
         로그인된 Fliki.ai 세션에서 PPT 파일을 사용하여 비디오 생성 프로세스를 조율합니다.
 
@@ -417,8 +424,7 @@ class FlikiVideoGenerator:
 
         Args:
             ppt_file_path (str): 업로드할 PPT 파일의 경로.
-            user_level_info (str, optional): 사용자 수준 정보 프롬프트.
-                                            Defaults to "Beginner".
+            prompt (str, optional): 영상 제작을 위한 500자 이내의 프롬프트.
 
         Returns:
             bool: 전체 비디오 생성 및 다운로드 시작 프로세스의 성공 여부.
@@ -430,7 +436,7 @@ class FlikiVideoGenerator:
 
         print(f"--- Fliki 비디오 생성 시작 (PPT: {ppt_file_path}) ---")
 
-        if not self._handle_upload_step(ppt_file_path, user_level_info):
+        if not self._handle_upload_step(ppt_file_path, prompt):
             print("비디오 생성 실패: 업로드 단계에서 오류 발생.")
             return False
 
@@ -468,5 +474,8 @@ if __name__ == "__main__":
     if generator.driver:
         if generator.login():
             print("로그인 성공")
+            generator.generate_video_from_ppt(
+                "data/pdfs/IT-Git.pdf", "영상 제작을 위한 프롬프트"
+            )
     else:
         print("FlikiVideoGenerator 초기화 실패.")

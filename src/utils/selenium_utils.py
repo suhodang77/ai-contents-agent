@@ -5,6 +5,7 @@ import pyautogui
 import pyperclip
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import Select
@@ -270,3 +271,79 @@ def chrome_focuse(driver):
         time.sleep(1)  # 포커스가 실제로 적용될 시간
     except Exception as e:
         print(f"JavaScript로 포커스 맞추기 실패: {e}")
+
+def slider_drag(driver, slider_xpath, thumb_xpath, target_value):
+    if element_click(
+        driver, slider_xpath
+    ):
+        print("트랙 클릭 성공 또는 시도됨.")
+        time.sleep(0.5)
+
+        try:
+            wait = WebDriverWait(driver, 10)
+            thumb_element = wait.until(
+                EC.presence_of_element_located((By.XPATH, thumb_xpath))
+            )
+            track_element = wait.until(
+                EC.presence_of_element_located((By.XPATH, slider_xpath))
+            )
+            print("슬라이더 핸들 및 트랙 요소 찾음.")
+
+            current_value = float(thumb_element.get_attribute("aria-valuenow"))
+            min_value = float(thumb_element.get_attribute("aria-valuemin"))
+            max_value = float(thumb_element.get_attribute("aria-valuemax"))
+            print(f"현재 값: {current_value}, 최소값: {min_value}, 최대값: {max_value}")
+
+            if not (min_value <= target_value <= max_value):
+                print(
+                    f"경고: 목표 값 {target_value}이 유효 범위 [{min_value}-{max_value}]를 벗어납니다. 값을 조정합니다."
+                )
+                target_value = max(min_value, min(target_value, max_value))
+                print(f"조정된 목표 값: {target_value}")
+
+            track_width = track_element.size["width"]
+            if track_width == 0:
+                print(
+                    "오류: 슬라이더 트랙의 너비가 0입니다. 요소를 잘못 찾았거나 숨겨져 있을 수 있습니다."
+                )
+
+            value_range = max_value - min_value
+            if value_range == 0:
+                print("경고: 슬라이더의 최소값과 최대값이 동일합니다.")
+                offset_percentage = 0
+            else:
+                offset_percentage = (target_value - min_value) / value_range
+
+            current_offset_percentage = (
+                (current_value - min_value) / value_range if value_range != 0 else 0
+            )
+            current_x_pixels = current_offset_percentage * track_width
+
+            target_x_pixels = offset_percentage * track_width
+            x_offset = target_x_pixels - current_x_pixels
+
+            print(f"트랙 너비: {track_width}px")
+            print(f"목표 값 비율: {offset_percentage:.2f}")
+            print(f"현재 핸들 X 위치 (추정): {current_x_pixels:.2f}px")
+            print(f"목표 핸들 X 위치 (추정): {target_x_pixels:.2f}px")
+            print(f"이동할 X 오프셋: {x_offset:.2f}px")
+
+            actions = ActionChains(driver)
+            actions.click_and_hold(thumb_element).move_by_offset(
+                int(round(x_offset)), 0
+            ).release().perform()
+
+            print(f"슬라이더 값을 {target_value}(으)로 설정 시도 완료.")
+            time.sleep(1)
+
+            updated_value = float(thumb_element.get_attribute("aria-valuenow"))
+            print(f"변경 후 실제 값 (aria-valuenow): {updated_value}")
+            if abs(updated_value - target_value) < 0.5:
+                print("슬라이더 값 설정 성공적으로 확인됨.")
+            else:
+                print(
+                    f"경고: 슬라이더 값이 정확히 설정되지 않았을 수 있습니다. (목표: {target_value}, 실제: {updated_value})"
+                )
+
+        except Exception as e:
+            print(f"슬라이더 조작 중 오류 발생: {e}")
