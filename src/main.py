@@ -1,6 +1,7 @@
 import os
 import time
 import glob
+from urllib.parse import urlparse, parse_qs
 from .modules.lilys_summarizer import LilysSummarizer
 from .modules.gemini_responder import GeminiResponder
 from .modules.gamma_automator import GammaAutomator
@@ -51,24 +52,47 @@ def main():
         f"데이터 디렉토리 확인: {DATA_DIR}, {PDF_DIR}, {VIDEO_DIR}, {GENERATED_TEXT_DIR}"
     )
 
-    # 1. 동영상 URL 입력 받기
-    youtube_url = input("요약할 YouTube 동영상 URL을 입력하세요: ")
-    if not youtube_url:
+    # 1. 동영상 정보 입력 받기
+    youtube_url_input = input("요약할 YouTube 동영상 URL을 입력하세요: ")
+    if not youtube_url_input:
         print("URL이 입력되지 않았습니다. 프로그램을 종료합니다.")
         return
 
+    try:
+        parsed_url = urlparse(youtube_url_input)
+        if parsed_url.hostname == "youtu.be":  # 2번 포맷
+            video_id = parsed_url.path[1:]  # 맨 앞의 '/' 제거
+            youtube_url = f"https://www.youtube.com/watch?v={video_id}"
+        elif parsed_url.hostname in ("www.youtube.com", "youtube.com"):  # 1번 포맷
+            query_params = parse_qs(parsed_url.query)
+            video_id = query_params.get("v", [None])[0]
+            if video_id:
+                youtube_url = f"https://www.youtube.com/watch?v={video_id}"
+            else:
+                raise ValueError("유효한 YouTube 비디오 ID를 찾을 수 없습니다.")
+        else:
+            raise ValueError("유효한 YouTube URL이 아닙니다.")
+        print(f"변환된 URL: {youtube_url}")
+    except ValueError as e:
+        print(f"URL 처리 중 오류 발생: {e}")
+        return
+    except Exception as e:
+        print(f"알 수 없는 오류 발생: {e}")
+        return
+
+    # 2. 강의 제목 입력 받기
     lecture_title = input("강의 제목을 입력하세요: ")
     if not lecture_title:
         print("강의 제목이 입력되지 않았습니다. 프로그램을 종료합니다.")
         return
 
-    # 학습 대상자 입력 받기
+    # 3. 학습 대상자 입력 받기
     valid_audiences = ["초등학생", "중학생", "일반인"]
     target_audience_input = input(
         f"학습 대상자를 입력하세요 ({', '.join(valid_audiences)}, 기본값: 일반인): "
     )
     if not target_audience_input or target_audience_input not in valid_audiences:
-        print(f"유효하지 않은 대상자입니다. 기본값 '일반인'으로 설정합니다.")
+        print("유효하지 않은 대상자입니다. 기본값 '일반인'으로 설정합니다.")
         target_audience = "일반인"
     else:
         target_audience = target_audience_input
@@ -115,7 +139,7 @@ def main():
         # 상세 페이지 생성을 시도하지 않고 종료할 수 있지만, 요구사항에 따라 new_script가 없어도 진행할 수 있도록 return은 주석 처리
         # return
 
-    # 4. 상세페이지 생성 (new_script가 성공적으로 생성되었는지 확인 후 진행)
+    # 4. GeminiResponder로 상세페이지 생성
     print("\n--- 4. 상세페이지 생성 시작 ---")
     if new_script:  # new_script가 존재할 때만 상세 페이지 생성 시도
         try:
@@ -186,7 +210,10 @@ def main():
     if ppt_file_path:
         print("\n--- 6. Fliki를 사용하여 동영상 생성 시작 ---")
         try:
-            fliki_generator = FlikiVideoGenerator()
+            fliki_generator = FlikiVideoGenerator(
+                target_audience=target_audience,
+                lecture_title=lecture_title,
+            )
             if not fliki_generator.driver:
                 print(
                     "FlikiVideoGenerator WebDriver 초기화 실패. 동영상 생성을 진행할 수 없습니다."

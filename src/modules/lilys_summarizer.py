@@ -192,6 +192,9 @@ class LilysSummarizer:
                 }
 
             print(f"요약 생성 요청 성공. requestId: {request_id}")
+            new_summarized_data = {youtube_url: request_id}
+            self.summarized_urls_data.update(new_summarized_data)
+            self._save_summarized_urls(new_summarized_data)
 
             last_result = {}
             for _ in range(max_polling_attempts):
@@ -199,9 +202,6 @@ class LilysSummarizer:
                 result = self.get_summary_result_by_request_id(request_id, result_type)
                 last_result = result
                 if "summary" in result:
-                    new_summarized_data = {youtube_url: request_id}
-                    self.summarized_urls_data.update(new_summarized_data)
-                    self._save_summarized_urls(new_summarized_data)
                     return result
                 elif "status" in result and result["status"] != "pending":
                     return result
