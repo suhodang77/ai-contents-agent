@@ -17,17 +17,27 @@ from ..utils.selenium_setup import setup_selenium_driver
 
 
 class FlikiVideoGenerator:
-    def __init__(self):
+    BASE_SCRIP = """{target_audience}도 충분히 이해할 수 있도록 '{lecture_title}'이라는 개념을 쉽고 명확하게 설명하는 교육용 영상을 제작해줘.
+설명은 너무 기술적이거나 전문적인 용어를 사용하지 말고, 일상생활에서 쉽게 접할 수 있는 상황이나 친숙한 예시를 활용해 설명해줘.
+핵심 개념은 짧고 간결하게 정리하되, 아이들이 자연스럽게 흥미를 가질 수 있도록 이야기하듯 전달해줘.
+영상은 다음과 같은 논리적 구조를 따라 구성해줘: 먼저, 강화학습이 필요한 상황이나 문제를 간단히 제시한 뒤, {lecture_title}의 정의를 {target_audience} 수준의 언어로 설명해줘.
+이어서 1~2개의 쉬운 비유나 사례(예: 게임, 동물 훈련, 학습 보상 등)를 들어 {lecture_title}이 어떻게 작동하는지를 보여주고, 마지막에는 주요 내용을 요약하고 {lecture_title}이 어떤 분야에서 활용되는지도 간략히 언급해줘.
+전체적으로 밝고 친근한 분위기로 구성해줘"""
+
+    def __init__(self, **data):
         """
         FlikiVideoGenerator 클래스를 초기화합니다.
 
         공통 Selenium WebDriver 설정을 로드하고 Fliki 웹사이트로 이동합니다.
         """
-        self.driver = setup_selenium_driver(
+        self.driver, self.chrome_browser_opened_by_script = setup_selenium_driver(
             download_subdir="videos", start_url="https://app.fliki.ai/"
         )
         if not self.driver:
             print("WebDriver 초기화 실패. FlikiVideoGenerator 인스턴스 생성 중단.")
+
+        self.target_audience = data.get("target_audience", "일반인")
+        self.lecture_title = data.get("lecture_title", "강의 제목")
 
     def login(self):
         """
@@ -85,7 +95,7 @@ class FlikiVideoGenerator:
                 self.driver.quit()
                 return False
 
-    def _handle_upload_step(self, ppt_file_path, user_level_info):
+    def _handle_upload_step(self, ppt_file_path):
         """
         PPT 파일 업로드 및 초기 정보 입력 단계를 처리합니다.
 
@@ -116,17 +126,26 @@ class FlikiVideoGenerator:
                 f"오류: 사용자 정보 입력란({user_info_textarea_xpath})을 찾을 수 없습니다."
             )
             return False
+
+        format_params = {
+            "target_audience": self.target_audience,
+            "lecture_title": self.lecture_title,
+        }
         if not paste_text_to_element(
-            self.driver, user_info_textarea_xpath, user_level_info
+            self.driver,
+            user_info_textarea_xpath,
+            self.BASE_SCRIP.format(**format_params),
         ):
             print("경고: 사용자 정보 입력 실패. 계속 진행합니다.")
-            
+
+        print("슬라이더 드래그 시도...")
         slider_drag(
             driver=self.driver,
             slider_xpath="/html/body/div[2]/div/div[2]/div/div[2]/div/span/span[1]",
             thumb_xpath="/html/body/div[2]/div/div[2]/div/div[2]/div/span/span[2]/span",
             target_value=15,
         )
+        print("슬라이더 드래그 완료.")
 
         file_input_xpath = "/html/body/div[2]/div/div[2]/div/div[3]/div/input"
         print("PPT 파일 업로드 시도...")
@@ -415,7 +434,7 @@ class FlikiVideoGenerator:
             print(f"오류: 최종 확인 버튼 ({xpath}) 처리 중 예상치 못한 오류 발생: {e}")
             return False
 
-    def generate_video_from_ppt(self, ppt_file_path, prompt):
+    def generate_video_from_ppt(self, ppt_file_path):
         """
         로그인된 Fliki.ai 세션에서 PPT 파일을 사용하여 비디오 생성 프로세스를 조율합니다.
 
@@ -436,7 +455,7 @@ class FlikiVideoGenerator:
 
         print(f"--- Fliki 비디오 생성 시작 (PPT: {ppt_file_path}) ---")
 
-        if not self._handle_upload_step(ppt_file_path, prompt):
+        if not self._handle_upload_step(ppt_file_path):
             print("비디오 생성 실패: 업로드 단계에서 오류 발생.")
             return False
 
@@ -474,8 +493,6 @@ if __name__ == "__main__":
     if generator.driver:
         if generator.login():
             print("로그인 성공")
-            generator.generate_video_from_ppt(
-                "data/pdfs/IT-Git.pdf", "영상 제작을 위한 프롬프트"
-            )
+            generator.generate_video_from_ppt("data/pdfs/IT-Git.pdf")
     else:
         print("FlikiVideoGenerator 초기화 실패.")
