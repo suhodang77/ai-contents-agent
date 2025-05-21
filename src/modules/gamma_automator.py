@@ -4,7 +4,14 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
-from ..utils.selenium_utils import element_click, paste_text_to_element, press_shift_tab_multiple_times, press_enter, chrome_focuse
+from ..utils.selenium_utils import (
+    element_click,
+    paste_text_to_element,
+    press_tab_multiple_times,
+    press_shift_tab_multiple_times,
+    press_enter,
+    chrome_focuse,
+)
 from ..utils.selenium_setup import setup_selenium_driver
 
 
@@ -16,7 +23,7 @@ class GammaAutomator:
         Selenium WebDriver를 설정하고 Gamma 웹사이트의 '텍스트 붙여넣기' 페이지로 이동합니다.
         WebDriver 초기화에 실패하면 오류 메시지를 출력합니다.
         """
-        self.driver = setup_selenium_driver(
+        self.driver, self.chrome_browser_opened_by_script = setup_selenium_driver(
             download_subdir="pdfs", start_url="https://gamma.app/create/paste"
         )
         if not self.driver:
@@ -41,10 +48,14 @@ class GammaAutomator:
                     )
                 )
             )
-            chrome_focuse(self.driver)
-            time.sleep(1)
-            press_shift_tab_multiple_times(1)
-            press_enter()
+            if self.chrome_browser_opened_by_script:
+                chrome_focuse(self.driver)
+                time.sleep(1)
+                press_shift_tab_multiple_times(1)
+                press_enter()
+            else:
+                press_tab_multiple_times(2)
+                press_enter()
             return True
         except Exception as _:
             login_complete_indicator_xpath = (
@@ -276,9 +287,7 @@ class GammaAutomator:
 
         # PDF 생성 완료 상태를 기다립니다.
         current_file_dir = os.path.dirname(os.path.abspath(__file__))
-        download_directory = os.path.join(
-            current_file_dir, "..", "..", "data", "pdfs"
-        )
+        download_directory = os.path.join(current_file_dir, "..", "..", "data", "pdfs")
         max_wait_time_for_pdf = 3600  # PDF 생성 대기 시간 (초)
 
         if self._wait_for_new_pdf_in_directory(

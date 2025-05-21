@@ -109,8 +109,10 @@ def setup_selenium_driver(download_subdir: str, start_url: str):
                     f"--user-data-dir={selenium_user_data_dir}",
                 ]
             )
+            chrome_browser_open = False
             time.sleep(2)  # 브라우저 시작 대기
         else:
+            chrome_browser_open = True
             print("기존 Chrome 브라우저(디버깅 포트 9222)를 사용합니다.")
     else:
         print("Chrome 브라우저를 찾을 수 없습니다. 수동으로 Chrome을 실행해주세요.")
@@ -144,4 +146,4 @@ def setup_selenium_driver(download_subdir: str, start_url: str):
 
     driver.get(start_url)
 
-    return driver
+    return driver, chrome_browser_open
