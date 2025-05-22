@@ -10,7 +10,12 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import Select
-from selenium.common.exceptions import NoSuchElementException, TimeoutException
+from selenium.common.exceptions import (
+    NoSuchElementException,
+    TimeoutException,
+    NoSuchWindowException,
+    WebDriverException,
+)
 
 
 def send_select_all_and_clear(element):
@@ -257,27 +262,162 @@ def press_enter():
     pyautogui.press("enter")
 
 
-def chrome_focuse(driver):
-    main_window_handle = driver.current_window_handle
+def chrome_focuse(driver, max_retries=3, delay_between_retries=0.5):
+    """
+    Windows와 macOS에서 Selenium으로 제어 중인 Chrome 브라우저 창에 포커스를 맞추고
+    화면 맨 앞으로 가져옵니다.
 
-    # Chrome 창으로 포커스 맞추기
-    try:
-        print("Chrome 창으로 포커스 시도 (JavaScript)...")
-        driver.switch_to.window(
-            main_window_handle
-        )  # Selenium에게 해당 창을 다시 인지시킴
-        driver.execute_script("window.focus();")  # JavaScript로 브라우저 창 포커스
-        # 추가적으로 창을 앞으로 가져오는 JavaScript (항상 작동하지 않을 수 있음)
-        # driver.execute_script("window.open('','_self').close(); window.focus();") # 약간의 트릭
-        print("포커스 시도 완료.")
-        time.sleep(1)  # 포커스가 실제로 적용될 시간
-    except Exception as e:
-        print(f"JavaScript로 포커스 맞추기 실패: {e}")
+    Args:
+        driver: 활성 Selenium WebDriver 인스턴스.
+        max_retries (int): 포커싱 재시도 횟수.
+        delay_between_retries (float): 재시도 간 대기 시간 (초).
+
+    Returns:
+        bool: 포커싱 성공 시 True, 실패 시 False.
+    """
+    if not driver:
+        print("오류: 유효한 WebDriver 인스턴스가 제공되지 않았습니다.")
+        return False
+
+    system_os = platform.system()
+    print(f"운영체제: {system_os}. Chrome 창 포커싱 시작...")
+
+    for attempt in range(max_retries):
+        print(f"포커싱 시도 #{attempt + 1}/{max_retries}")
+        try:
+            # 1. Selenium으로 현재 창 핸들 가져오기 및 JavaScript 포커스 시도
+            current_handle = driver.current_window_handle
+            driver.switch_to.window(current_handle)
+            driver.execute_script("window.focus();")
+            print("Selenium JavaScript window.focus() 실행됨.")
+            time.sleep(0.2)  # JavaScript 적용 대기
+
+            # 2. PyAutoGUI로 OS 수준에서 창 활성화
+            # Chrome 창의 제목을 기반으로 찾습니다.
+            # 페이지 제목이 자주 바뀌므로, "Google Chrome" 또는 브라우저 자체 이름으로 찾는 것이 더 일반적일 수 있습니다.
+            # driver.title을 사용하여 현재 페이지 제목을 포함하는 창을 우선적으로 찾습니다.
+
+            expected_title_part = driver.title  # 현재 탭의 제목
+            browser_keyword = "Chrome"  # 일반적인 Chrome 브라우저 식별자
+            if (
+                "msedge" in driver.capabilities.get("browserName", "").lower()
+            ):  # Edge 브라우저인 경우
+                browser_keyword = "Microsoft Edge"
+
+            target_window = None
+            all_windows = pyautogui.getAllWindows()
+
+            # 우선 현재 Selenium이 제어하는 탭의 제목과 일치하는 창을 찾음
+            if expected_title_part:
+                for window in all_windows:
+                    if (
+                        expected_title_part in window.title
+                        and browser_keyword in window.title
+                    ):
+                        target_window = window
+                        break
+
+            # 위에서 못 찾았거나, expected_title_part가 없다면 browser_keyword로만 다시 찾음
+            if not target_window:
+                for window in all_windows:
+                    if browser_keyword in window.title:
+                        # 여러 Chrome/Edge 창이 있을 경우, 어떤 것이 Selenium 창인지 특정하기 어려움
+                        # 여기서는 첫 번째 발견된 창을 사용 (개선 여지 있음)
+                        target_window = window
+                        print(
+                            f"페이지 제목으로 정확히 일치하는 창을 못찾아 '{browser_keyword}' 키워드로 창 '{window.title}' 선택됨."
+                        )
+                        break
+
+            if target_window:
+                print(f"PyAutoGUI: 창 '{target_window.title}' 활성화 시도...")
+
+                # 창 활성화 시도
+                if system_os == "Darwin":  # macOS
+                    # activate()는 macOS에서 항상 창을 맨 앞으로 가져오지 않을 수 있음
+                    # AppleScript를 사용하는 것이 더 안정적일 수 있으나, 여기서는 pyautogui로 최대한 시도
+                    try:
+                        target_window.activate()
+                        time.sleep(delay_between_retries / 2)
+                        if (
+                            not target_window.isActive
+                        ):  # activate 후에도 활성화 안됐으면
+                            # macOS에서는 minimize/maximize 트릭이 일반적이지 않음
+                            # pyautogui.click(target_window.left + 10, target_window.top + 10) # 창 내부 클릭 시도
+                            print(
+                                f"macOS: '{target_window.title}' activate 시도 후, 활성 상태: {target_window.isActive}"
+                            )
+                    except Exception as e_mac_activate:
+                        print(f"macOS activate 중 오류: {e_mac_activate}")
+                        # AppleScript 대안을 고려할 수 있음 (별도 함수로 구현)
+                        # activate_chrome_via_applescript(browser_keyword)
+
+                elif system_os == "Windows":
+                    try:
+                        target_window.activate()
+                        time.sleep(delay_between_retries / 2)
+                        if (
+                            not target_window.isActive
+                        ):  # activate() 후에도 활성화 안됐으면
+                            print(
+                                f"Windows: '{target_window.title}' activate 후 비활성. 최소화/최대화 트릭 시도."
+                            )
+                            target_window.minimize()
+                            time.sleep(0.1)
+                            target_window.maximize()  # 또는 target_window.restore()
+                            time.sleep(0.1)
+                            target_window.activate()
+                    except Exception as e_win_activate:
+                        print(f"Windows activate/트릭 중 오류: {e_win_activate}")
+                else:  # Linux 등 기타 OS
+                    target_window.activate()  # 기본 activate 시도
+                    time.sleep(delay_between_retries / 2)
+
+                # 최종 확인 및 Selenium 재포커스
+                time.sleep(0.3)  # OS가 창을 앞으로 가져올 시간
+                active_after_pyautogui = pyautogui.getActiveWindow()
+                if (
+                    active_after_pyautogui
+                    and target_window.title == active_after_pyautogui.title
+                ):
+                    print(f"PyAutoGUI: 창 '{target_window.title}' 성공적으로 활성화됨.")
+                    # Selenium 컨텍스트 재확인
+                    driver.switch_to.window(current_handle)
+                    driver.execute_script(
+                        "window.focus();"
+                    )  # 한 번 더 JavaScript 포커스
+                    return True
+                else:
+                    print(
+                        f"PyAutoGUI: 창 활성화 확인 실패. 현재 활성 창: {active_after_pyautogui.title if active_after_pyautogui else '없음'}"
+                    )
+
+            else:
+                print(
+                    f"PyAutoGUI: 제목에 '{expected_title_part}' 또는 '{browser_keyword}'을 포함하는 Chrome/Edge 창을 찾지 못했습니다."
+                )
+
+        except NoSuchWindowException:
+            print("오류: Selenium이 제어하는 브라우저 창이 닫혔거나 유효하지 않습니다.")
+            return False  # WebDriver가 유효하지 않으면 더 이상 진행 불가
+        except WebDriverException as wde:
+            print(f"WebDriver 오류 발생: {wde}")
+            # WebDriver 연결이 끊겼을 수 있음
+            return False
+        except Exception as e:
+            print(f"포커싱 시도 중 예기치 않은 오류 발생: {e}")
+
+        if attempt < max_retries - 1:
+            print(f"{delay_between_retries}초 후 재시도...")
+            time.sleep(delay_between_retries)
+        else:
+            print("최대 재시도 횟수 도달. Chrome 창 포커싱 최종 실패.")
+            return False
+    return False
+
 
 def slider_drag(driver, slider_xpath, thumb_xpath, target_value):
-    if element_click(
-        driver, slider_xpath
-    ):
+    if element_click(driver, slider_xpath):
         print("트랙 클릭 성공 또는 시도됨.")
         time.sleep(0.5)
 
