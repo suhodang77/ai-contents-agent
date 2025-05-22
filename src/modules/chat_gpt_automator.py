@@ -1,4 +1,5 @@
 import time
+import platform
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -107,12 +108,35 @@ class ChatGPTAutomator:
             
             chrome_focuse(self.driver)
             time.sleep(1)
-            press_shift_tab_multiple_times(3)
-            press_enter()
-            time.sleep(2)
+            
+            if self.driver.find_elements(By.XPATH, "/html/body/div[5]/div/div/div/div/div"):
+                press_shift_tab_multiple_times(3)
+                if platform.system() == "Windows":
+                    press_shift_tab_multiple_times(1)
+                press_enter()
+                
+            else:
+                press_shift_tab_multiple_times(7)
+                if platform.system() == "Windows":
+                    press_shift_tab_multiple_times(1)
+                press_enter()
+                time.sleep(1)
+                
+                press_shift_tab_multiple_times(3)
+                press_enter()
+                time.sleep(3)
+                
+            WebDriverWait(self.driver, 10).until(
+                EC.visibility_of_all_elements_located(
+                    (
+                        By.XPATH,
+                        "/html/body/div/fieldset/form/div[2]/div[2]/button[1]",
+                    )
+                )
+            )
             press_tab_multiple_times(3)
             press_enter()
-            time.sleep(2)
+            time.sleep(3)
         except TimeoutError:
             print("로그인 시간 초과 또는 페이지 로딩 실패.")
             print("자동화 프로세스를 시작할 수 없습니다.")
@@ -145,7 +169,6 @@ class ChatGPTAutomator:
             "/html/body/div[1]/div/div[1]/div[2]/main/div/div/div[3]/div[1]/div/div/div[2]/form/div[1]/div/div[1]/div[1]/div[2]/div/div/div/div/div/p",
             self.BASE_PROMPT.format(**data)
         )
-        press_tab_multiple_times(4)
         press_enter()
         
         
