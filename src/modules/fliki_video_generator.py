@@ -59,7 +59,7 @@ class FlikiVideoGenerator:
                 )
             )
             chrome_focuse(self.driver)
-            time.sleep(1)
+            time.sleep(5)
             press_tab_multiple_times(1)
             press_enter()
             time.sleep(2)

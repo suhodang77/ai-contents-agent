@@ -50,7 +50,7 @@ class GammaAutomator:
             )
             if self.chrome_browser_opened_by_script:
                 chrome_focuse(self.driver)
-                time.sleep(1)
+                time.sleep(5)
                 press_shift_tab_multiple_times(1)
                 press_enter()
             else:
