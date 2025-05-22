@@ -1,5 +1,6 @@
 import time
 import os
+import platform
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -7,7 +8,6 @@ from selenium.common.exceptions import TimeoutException
 from ..utils.selenium_utils import (
     element_click,
     paste_text_to_element,
-    press_tab_multiple_times,
     press_shift_tab_multiple_times,
     press_enter,
     chrome_focuse,
@@ -54,7 +54,9 @@ class GammaAutomator:
                 press_shift_tab_multiple_times(1)
                 press_enter()
             else:
-                press_tab_multiple_times(2)
+                press_shift_tab_multiple_times(9)
+                if platform.system() == "Windows":
+                    press_shift_tab_multiple_times(1)
                 press_enter()
             return True
         except Exception as _:
@@ -406,7 +408,4 @@ class GammaAutomator:
 
 if __name__ == "__main__":
     automator = GammaAutomator()
-    if hasattr(automator, "driver"):
-        print(automator.login())
-    else:
-        print("GammaAutomator 초기화 실패")
+    automator.login()
