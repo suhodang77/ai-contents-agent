@@ -3,6 +3,7 @@ import platform
 import time
 import pyautogui
 import pyperclip
+import random
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
@@ -232,7 +233,7 @@ def press_tab_multiple_times(count):
     print(f"Tab 키를 {count}번 누릅니다.")
     for _ in range(count):
         pyautogui.press("tab")
-        time.sleep(0.2)
+        time.sleep(random.randrange(1, 5) / 10)
 
 
 def press_shift_tab_multiple_times(count):
@@ -243,6 +244,7 @@ def press_shift_tab_multiple_times(count):
             pyautogui.keyDown("shift")
             pyautogui.press("tab")
             pyautogui.keyUp("shift")
+            time.sleep(random.randrange(1, 5) / 10)
 
         except Exception as e:
             print(f"Shift+Tab 실행 중 오류 발생: {e}")

@@ -1,7 +1,7 @@
+import time
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-import time
 from dotenv import load_dotenv
 from ..utils.selenium_setup import setup_selenium_driver
 from ..utils.selenium_utils import (
@@ -154,8 +154,8 @@ if __name__ == "__main__":
     automator = ChatGPTAutomator()
     automator.login()
     automator.generate_thumbnail(
-        course_name="컴퓨터적 사고",
-        professor_name="김영태",
+        course_name="도커",
+        professor_name="인프런",
         difficulty_level="1",
         audience_level_description="초등학생",
         lecture_number="1"
