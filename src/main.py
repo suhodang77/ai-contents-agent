@@ -6,7 +6,7 @@ from .modules.lilys_summarizer import LilysSummarizer
 from .modules.gemini_responder import GeminiResponder
 from .modules.gamma_automator import GammaAutomator
 from .modules.fliki_video_generator import FlikiVideoGenerator
-from .modules.chat_gpt_automator import ChatGPTAutomator
+# from .modules.chat_gpt_automator import ChatGPTAutomator
 
 DATA_DIR = "data"
 GENERATED_TEXT_DIR = os.path.join(DATA_DIR, "generated_texts")
@@ -261,24 +261,24 @@ def main():
 
     print("\n--- 모든 작업 완료. 프로그램을 종료합니다. ---")
     
-    # 7. ChatGPTAutomator로 썸네일 생성
-    print("\n--- 7. ChatGPTAutomator로 썸네일 생성 시작 ---")
-    try:
-        chatgpt_automator = ChatGPTAutomator()
-        if chatgpt_automator.login():
-            print("ChatGPT 로그인 성공. 썸네일 생성을 시작합니다.")
-            chatgpt_automator.generate_thumbnail(
-                course_name=lecture_title,
-                professor_name=professor_name,
-                difficulty_level=difficulty_level,
-                audience_level_description=target_audience,
-                lecture_number=lecture_number
-            )
-            print("썸네일 생성 완료. 결과를 확인합니다.")
-        else:
-            print("ChatGPT 로그인 실패. 썸네일 생성을 진행할 수 없습니다.")
-    except Exception as e:
-        print(f"ChatGPTAutomator 처리 중 오류 발생: {e}")
+    # # 7. ChatGPTAutomator로 썸네일 생성
+    # print("\n--- 7. ChatGPTAutomator로 썸네일 생성 시작 ---")
+    # try:
+    #     chatgpt_automator = ChatGPTAutomator()
+    #     if chatgpt_automator.login():
+    #         print("ChatGPT 로그인 성공. 썸네일 생성을 시작합니다.")
+    #         chatgpt_automator.generate_thumbnail(
+    #             course_name=lecture_title,
+    #             professor_name=professor_name,
+    #             difficulty_level=difficulty_level,
+    #             audience_level_description=target_audience,
+    #             lecture_number=lecture_number
+    #         )
+    #         print("썸네일 생성 완료. 결과를 확인합니다.")
+    #     else:
+    #         print("ChatGPT 로그인 실패. 썸네일 생성을 진행할 수 없습니다.")
+    # except Exception as e:
+    #     print(f"ChatGPTAutomator 처리 중 오류 발생: {e}")
     
 
 
