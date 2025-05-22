@@ -1,4 +1,5 @@
 import time
+import platform
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -10,6 +11,7 @@ from ..utils.selenium_utils import (
     select_dropdown_option,
     chrome_focuse,
     press_tab_multiple_times,
+    press_shift_tab_multiple_times,
     press_enter,
     slider_drag,
 )
@@ -60,7 +62,9 @@ class FlikiVideoGenerator:
             )
             chrome_focuse(self.driver)
             time.sleep(5)
-            press_tab_multiple_times(1)
+            press_shift_tab_multiple_times(5)
+            if platform.system() == "Windows":
+                press_shift_tab_multiple_times(1)
             press_enter()
             time.sleep(2)
             press_tab_multiple_times(2)
@@ -490,9 +494,4 @@ class FlikiVideoGenerator:
 
 if __name__ == "__main__":
     generator = FlikiVideoGenerator()
-    if generator.driver:
-        if generator.login():
-            print("로그인 성공")
-            generator.generate_video_from_ppt("data/pdfs/IT-Git.pdf")
-    else:
-        print("FlikiVideoGenerator 초기화 실패.")
+    generator.login()
