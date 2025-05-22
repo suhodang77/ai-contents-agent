@@ -143,7 +143,7 @@ class FlikiVideoGenerator:
             driver=self.driver,
             slider_xpath="/html/body/div[2]/div/div[2]/div/div[2]/div/span/span[1]",
             thumb_xpath="/html/body/div[2]/div/div[2]/div/div[2]/div/span/span[2]/span",
-            target_value=15,
+            target_value=1,
         )
         print("슬라이더 드래그 완료.")
 

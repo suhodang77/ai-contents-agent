@@ -224,7 +224,7 @@ def main():
             if fliki_generator.login():
                 print("Fliki 로그인 성공. 동영상 생성을 시작합니다.")
                 video_generated = fliki_generator.generate_video_from_ppt(
-                    ppt_file_path=ppt_file_path, prompt=""
+                    ppt_file_path=ppt_file_path
                 )
                 if video_generated:
                     print(
