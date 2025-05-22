@@ -116,15 +116,8 @@ class ChatGPTAutomator:
                 press_enter()
                 
             else:
-                press_shift_tab_multiple_times(7)
-                if platform.system() == "Windows":
-                    press_shift_tab_multiple_times(1)
-                press_enter()
-                time.sleep(1)
-                
                 press_shift_tab_multiple_times(3)
                 press_enter()
-                time.sleep(3)
                 
             WebDriverWait(self.driver, 10).until(
                 EC.visibility_of_all_elements_located(
