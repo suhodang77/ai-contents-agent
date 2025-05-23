@@ -48,6 +48,8 @@ class GammaAutomator:
                     )
                 )
             )
+            time.sleep(3)
+            
             if self.chrome_browser_opened_by_script:
                 chrome_focuse(self.driver)
                 time.sleep(5)
