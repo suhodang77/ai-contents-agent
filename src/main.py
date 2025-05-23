@@ -53,33 +53,33 @@ def main():
         f"데이터 디렉토리 확인: {DATA_DIR}, {PDF_DIR}, {VIDEO_DIR}, {GENERATED_TEXT_DIR}"
     )
 
-    # 1. 동영상 정보 입력 받기
-    youtube_url_input = input("요약할 YouTube 동영상 URL을 입력하세요: ")
-    if not youtube_url_input:
-        print("URL이 입력되지 않았습니다. 프로그램을 종료합니다.")
-        return
+    # # 1. 동영상 정보 입력 받기
+    # youtube_url_input = input("요약할 YouTube 동영상 URL을 입력하세요: ")
+    # if not youtube_url_input:
+    #     print("URL이 입력되지 않았습니다. 프로그램을 종료합니다.")
+    #     return
 
-    try:
-        parsed_url = urlparse(youtube_url_input)
-        if parsed_url.hostname == "youtu.be":  # 2번 포맷
-            video_id = parsed_url.path[1:]  # 맨 앞의 '/' 제거
-            youtube_url = f"https://www.youtube.com/watch?v={video_id}"
-        elif parsed_url.hostname in ("www.youtube.com", "youtube.com"):  # 1번 포맷
-            query_params = parse_qs(parsed_url.query)
-            video_id = query_params.get("v", [None])[0]
-            if video_id:
-                youtube_url = f"https://www.youtube.com/watch?v={video_id}"
-            else:
-                raise ValueError("유효한 YouTube 비디오 ID를 찾을 수 없습니다.")
-        else:
-            raise ValueError("유효한 YouTube URL이 아닙니다.")
-        print(f"변환된 URL: {youtube_url}")
-    except ValueError as e:
-        print(f"URL 처리 중 오류 발생: {e}")
-        return
-    except Exception as e:
-        print(f"알 수 없는 오류 발생: {e}")
-        return
+    # try:
+    #     parsed_url = urlparse(youtube_url_input)
+    #     if parsed_url.hostname == "youtu.be":  # 2번 포맷
+    #         video_id = parsed_url.path[1:]  # 맨 앞의 '/' 제거
+    #         youtube_url = f"https://www.youtube.com/watch?v={video_id}"
+    #     elif parsed_url.hostname in ("www.youtube.com", "youtube.com"):  # 1번 포맷
+    #         query_params = parse_qs(parsed_url.query)
+    #         video_id = query_params.get("v", [None])[0]
+    #         if video_id:
+    #             youtube_url = f"https://www.youtube.com/watch?v={video_id}"
+    #         else:
+    #             raise ValueError("유효한 YouTube 비디오 ID를 찾을 수 없습니다.")
+    #     else:
+    #         raise ValueError("유효한 YouTube URL이 아닙니다.")
+    #     print(f"변환된 URL: {youtube_url}")
+    # except ValueError as e:
+    #     print(f"URL 처리 중 오류 발생: {e}")
+    #     return
+    # except Exception as e:
+    #     print(f"알 수 없는 오류 발생: {e}")
+    #     return
 
     # 2. 강의 정보 입력 받기
     lecture_title, professor_name, difficulty_level, lecture_number = input("강의 제목, 교수명, 난이도, 차시를 공백으로 구분하여 입력하세요: ").split()
@@ -98,23 +98,33 @@ def main():
     else:
         target_audience = target_audience_input
     print(f"학습 대상자: {target_audience}")
-
-    # 2. LilysSummarizer로 스크립트 추출
-    print("\n--- 2. YouTube 동영상 스크립트 추출 시작 ---")
+    
+    # 4. 기존 영상 스크립트 입력 받기
+    original_script = None
+    script_file_path = 'data/script/script.txt'
     try:
-        summarizer = LilysSummarizer()
-        summary_result = summarizer.summarize_youtube_video(youtube_url)
-        if "error" in summary_result:
-            print(f"스크립트 추출 실패: {summary_result['error']}")
-            return
-        original_script = summary_result.get("summary")
-        if not original_script:
-            print("스크립트를 추출하지 못했습니다.")
-            return
-        print("스크립트 추출 완료.")
+        with open(script_file_path, 'r', encoding='utf-8') as f:
+            original_script = f.read()
+        print(f"예시 파일 '{script_file_path}'이(가) 생성되었습니다.\n")
     except Exception as e:
-        print(f"LilysSummarizer 처리 중 오류 발생: {e}")
-        return
+        print(f"예시 파일 생성 중 오류 발생: {e}\n")
+
+    # # 2. LilysSummarizer로 스크립트 추출
+    # print("\n--- 2. YouTube 동영상 스크립트 추출 시작 ---")
+    # try:
+    #     summarizer = LilysSummarizer()
+    #     summary_result = summarizer.summarize_youtube_video(youtube_url)
+    #     if "error" in summary_result:
+    #         print(f"스크립트 추출 실패: {summary_result['error']}")
+    #         return
+    #     original_script = summary_result.get("summary")
+    #     if not original_script:
+    #         print("스크립트를 추출하지 못했습니다.")
+    #         return
+    #     print("스크립트 추출 완료.")
+    # except Exception as e:
+    #     print(f"LilysSummarizer 처리 중 오류 발생: {e}")
+    #     return
 
     # 3. GeminiResponder로 새로운 동영상 스크립트 생성
     print("\n--- 3. 새로운 동영상 스크립트 생성 시작 ---")
