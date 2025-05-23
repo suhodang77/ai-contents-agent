@@ -2,7 +2,9 @@ import requests
 import os
 import json
 import time
+from dotenv import load_dotenv
 
+load_dotenv()
 
 class LilysSummarizer:
     def __init__(self, api_key=None):
