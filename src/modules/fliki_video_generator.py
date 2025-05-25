@@ -195,7 +195,7 @@ class FlikiVideoGenerator:
         template_skip_button_xpath = "/html/body/div[2]/div/div[3]/div/div/button[2]"
         print(f"Skip 버튼 확인 및 클릭 시도: {template_skip_button_xpath}")
         try:
-            WebDriverWait(self.driver, 120).until(
+            WebDriverWait(self.driver, 600).until(
                 EC.element_to_be_clickable((By.XPATH, template_skip_button_xpath))
             )
             print("'Skip' 버튼 확인됨. 클릭합니다.")
@@ -285,7 +285,7 @@ class FlikiVideoGenerator:
         submit_button_xpath = "/html/body/div[2]/div/div[3]/div/div/button[2]"
         print(f"Submit 버튼 확인 및 클릭 시도: {submit_button_xpath}")
         try:
-            WebDriverWait(self.driver, 240).until(
+            WebDriverWait(self.driver, 600).until(
                 EC.element_to_be_clickable((By.XPATH, submit_button_xpath))
             )
             print("'Submit' 버튼 확인됨. 클릭합니다.")
