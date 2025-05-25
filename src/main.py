@@ -1,8 +1,8 @@
 import os
 import time
 import glob
-from urllib.parse import urlparse, parse_qs
-from .modules.lilys_summarizer import LilysSummarizer
+# from urllib.parse import urlparse, parse_qs
+# from .modules.lilys_summarizer import LilysSummarizer
 from .modules.gemini_responder import GeminiResponder
 from .modules.gamma_automator import GammaAutomator
 from .modules.fliki_video_generator import FlikiVideoGenerator
@@ -101,7 +101,7 @@ def main():
     
     # 4. 기존 영상 스크립트 입력 받기
     original_script = None
-    script_file_path = 'data/script/script.txt'
+    script_file_path = os.path.join(DATA_DIR, "script", "script.txt")
     try:
         with open(script_file_path, 'r', encoding='utf-8') as f:
             original_script = f.read()
