@@ -6,11 +6,8 @@ downloaded_files
 .env
 .venv
 
-# videos
-/data/videos
-
-# pdfs
-/data/pdfs
+# results
+/data/results
 
 # generated_script
 /data/generated_texts
@@ -18,8 +15,8 @@ downloaded_files
 # selenium-dev-profile
 data/selenium-dev-profile
 
-# script
-/data/script
+# audio
+/data/audio
 
 # pycharm
 .idea

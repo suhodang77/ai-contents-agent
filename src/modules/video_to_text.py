@@ -30,7 +30,7 @@ class VideoToText:
             "overwrites": True,
             "downloader": "aria2c",
             "audioformat": "wav",
-            "outtmpl": os.path.join("data", "script", "lecture_audio.wav"),
+            "outtmpl": os.path.join("data", "audio", "lecture_audio.wav"),
         }
         
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -41,10 +41,11 @@ class VideoToText:
             return True
 
     def get_script(self) -> str:
+        print("[스크립트 추출 시작]")
         contents: list[types.Content] = [
             "첨부한 오디오 파일의 스크립트를 추출해주세요. 스크립트 외의 다른 출력이 답변에 포함되지 않도록 해주세요.",
             self.client.files.upload(
-                file=os.path.join("data", "script", "lecture_audio.wav")
+                file=os.path.join("data", "audio", "lecture_audio.wav")
             ),
         ]
         generate_content_config: types.GenerateContentConfig = (
@@ -62,7 +63,7 @@ class VideoToText:
             print(chunk.text, end="", flush=True)
             script_chunks.append(chunk.text)
         print("\n[스크립트 추출 완료]")
-        os.remove(os.path.join("data", "script", "lecture_audio.wav"))
+        os.remove(os.path.join("data", "audio", "lecture_audio.wav"))
         return "".join(script_chunks)
 
 

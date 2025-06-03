@@ -24,7 +24,7 @@ class GammaAutomator:
         WebDriver 초기화에 실패하면 오류 메시지를 출력합니다.
         """
         self.driver, self.chrome_browser_opened_by_script = setup_selenium_driver(
-            download_subdir="pdfs", start_url="https://gamma.app/create/paste"
+            download_subdir="results", start_url="https://gamma.app/create/paste"
         )
         if not self.driver:
             print("WebDriver 초기화 실패. GammaAutomator 인스턴스 생성 중단.")

@@ -33,7 +33,7 @@ class FlikiVideoGenerator:
         공통 Selenium WebDriver 설정을 로드하고 Fliki 웹사이트로 이동합니다.
         """
         self.driver, self.chrome_browser_opened_by_script = setup_selenium_driver(
-            download_subdir="videos", start_url="https://app.fliki.ai/"
+            download_subdir="results", start_url="https://app.fliki.ai/"
         )
         if not self.driver:
             print("WebDriver 초기화 실패. FlikiVideoGenerator 인스턴스 생성 중단.")

@@ -1,8 +1,9 @@
 import os
+import shutil
 import time
 import glob
-# from urllib.parse import urlparse, parse_qs
-# from .modules.lilys_summarizer import LilysSummarizer
+from urllib.parse import urlparse, parse_qs
+from .modules.video_to_text import VideoToText
 from .modules.gemini_responder import GeminiResponder
 from .modules.gamma_automator import GammaAutomator
 from .modules.fliki_video_generator import FlikiVideoGenerator
@@ -10,8 +11,8 @@ from .modules.fliki_video_generator import FlikiVideoGenerator
 
 DATA_DIR = "data"
 GENERATED_TEXT_DIR = os.path.join(DATA_DIR, "generated_texts")
-PDF_DIR = os.path.join(DATA_DIR, "pdfs")
-VIDEO_DIR = os.path.join(DATA_DIR, "videos")
+RESULT_DIR = os.path.join(DATA_DIR, "results")
+AUDIO_DIR = os.path.join(DATA_DIR, "audio")
 
 
 def ensure_dir(directory):
@@ -41,48 +42,55 @@ def get_latest_file(directory, extension):
     return latest_file
 
 
+def reset_dir():
+    if os.path.isdir(AUDIO_DIR):
+        shutil.rmtree(AUDIO_DIR)
+
+
 def main():
     print("AI 콘텐츠 생성 에이전트를 시작합니다.")
 
-    # 0. 필요 디렉토리 생성
+    # 0. 초기화
+    reset_dir()
+    
     ensure_dir(DATA_DIR)
-    ensure_dir(PDF_DIR)
-    ensure_dir(VIDEO_DIR)
+    ensure_dir(RESULT_DIR)
+    ensure_dir(AUDIO_DIR)
     ensure_dir(GENERATED_TEXT_DIR)
     print(
-        f"데이터 디렉토리 확인: {DATA_DIR}, {PDF_DIR}, {VIDEO_DIR}, {GENERATED_TEXT_DIR}"
+        f"데이터 디렉토리 확인: {DATA_DIR}, {RESULT_DIR}, {GENERATED_TEXT_DIR}"
     )
 
-    # # 1. 동영상 정보 입력 받기
-    # youtube_url_input = input("요약할 YouTube 동영상 URL을 입력하세요: ")
-    # if not youtube_url_input:
-    #     print("URL이 입력되지 않았습니다. 프로그램을 종료합니다.")
-    #     return
+    # 1. 동영상 정보 입력 받기
+    youtube_url_input = input("요약할 YouTube 동영상 URL을 입력하세요: ")
+    if not youtube_url_input:
+        print("URL이 입력되지 않았습니다. 프로그램을 종료합니다.")
+        return
 
-    # try:
-    #     parsed_url = urlparse(youtube_url_input)
-    #     if parsed_url.hostname == "youtu.be":  # 2번 포맷
-    #         video_id = parsed_url.path[1:]  # 맨 앞의 '/' 제거
-    #         youtube_url = f"https://www.youtube.com/watch?v={video_id}"
-    #     elif parsed_url.hostname in ("www.youtube.com", "youtube.com"):  # 1번 포맷
-    #         query_params = parse_qs(parsed_url.query)
-    #         video_id = query_params.get("v", [None])[0]
-    #         if video_id:
-    #             youtube_url = f"https://www.youtube.com/watch?v={video_id}"
-    #         else:
-    #             raise ValueError("유효한 YouTube 비디오 ID를 찾을 수 없습니다.")
-    #     else:
-    #         raise ValueError("유효한 YouTube URL이 아닙니다.")
-    #     print(f"변환된 URL: {youtube_url}")
-    # except ValueError as e:
-    #     print(f"URL 처리 중 오류 발생: {e}")
-    #     return
-    # except Exception as e:
-    #     print(f"알 수 없는 오류 발생: {e}")
-    #     return
+    try:
+        parsed_url = urlparse(youtube_url_input)
+        if parsed_url.hostname == "youtu.be":  # 2번 포맷
+            video_id = parsed_url.path[1:]  # 맨 앞의 '/' 제거
+            youtube_url = f"https://www.youtube.com/watch?v={video_id}"
+        elif parsed_url.hostname in ("www.youtube.com", "youtube.com"):  # 1번 포맷
+            query_params = parse_qs(parsed_url.query)
+            video_id = query_params.get("v", [None])[0]
+            if video_id:
+                youtube_url = f"https://www.youtube.com/watch?v={video_id}"
+            else:
+                raise ValueError("유효한 YouTube 비디오 ID를 찾을 수 없습니다.")
+        else:
+            raise ValueError("유효한 YouTube URL이 아닙니다.")
+        print(f"변환된 URL: {youtube_url}")
+    except ValueError as e:
+        print(f"URL 처리 중 오류 발생: {e}")
+        return
+    except Exception as e:
+        print(f"알 수 없는 오류 발생: {e}")
+        return
 
     # 2. 강의 정보 입력 받기
-    lecture_title, professor_name, difficulty_level, lecture_number = input("강의 제목, 교수명, 난이도, 차시를 공백으로 구분하여 입력하세요: ").split()
+    lecture_title, professor_name, difficulty_level, lecture_number = input("강의 제목, 교수명, 난이도, 차시를 ', '으로 구분하여 입력하세요: ").split(', ')
     if not lecture_title or not professor_name or not difficulty_level or not lecture_number:
         print("강의 제목이 입력되지 않았습니다. 프로그램을 종료합니다.")
         return
@@ -99,32 +107,19 @@ def main():
         target_audience = target_audience_input
     print(f"학습 대상자: {target_audience}")
     
-    # 4. 기존 영상 스크립트 입력 받기
-    original_script = None
-    script_file_path = os.path.join(DATA_DIR, "script", "script.txt")
+    # 2. YouTube 동영상 스크립트 추출
+    print("\n--- 2. YouTube 동영상 스크립트 추출 시작 ---")
     try:
-        with open(script_file_path, 'r', encoding='utf-8') as f:
-            original_script = f.read()
-        print(f"예시 파일 '{script_file_path}'이(가) 생성되었습니다.\n")
+        video_to_text = VideoToText()
+        if video_to_text.download_youtube_audio(youtube_url):
+            original_script = video_to_text.get_script()
+            print("스크립트 추출 완료.")
+        else:
+            print("스크립트 추출 실패.")
+            return
     except Exception as e:
-        print(f"예시 파일 생성 중 오류 발생: {e}\n")
-
-    # # 2. LilysSummarizer로 스크립트 추출
-    # print("\n--- 2. YouTube 동영상 스크립트 추출 시작 ---")
-    # try:
-    #     summarizer = LilysSummarizer()
-    #     summary_result = summarizer.summarize_youtube_video(youtube_url)
-    #     if "error" in summary_result:
-    #         print(f"스크립트 추출 실패: {summary_result['error']}")
-    #         return
-    #     original_script = summary_result.get("summary")
-    #     if not original_script:
-    #         print("스크립트를 추출하지 못했습니다.")
-    #         return
-    #     print("스크립트 추출 완료.")
-    # except Exception as e:
-    #     print(f"LilysSummarizer 처리 중 오류 발생: {e}")
-    #     return
+        print(f"스크립트 추출 중 오류 발생: {e}")
+        return
 
     # 3. GeminiResponder로 새로운 동영상 스크립트 생성
     print("\n--- 3. 새로운 동영상 스크립트 생성 시작 ---")
@@ -199,11 +194,11 @@ def main():
             # 추가 대기 시간이 필요하다면 여기에 추가할 수 있습니다.
             # time.sleep(10) # 예시: 추가 10초 대기
 
-            ppt_file_path = get_latest_file(PDF_DIR, "pdf")
+            ppt_file_path = get_latest_file(RESULT_DIR, "pdf")
             if ppt_file_path:
                 print(f"생성된 PPT (PDF) 파일: {ppt_file_path}")
             else:
-                print(f"{PDF_DIR} 에서 생성된 PDF 파일을 찾을 수 없습니다.")
+                print(f"{RESULT_DIR} 에서 생성된 PDF 파일을 찾을 수 없습니다.")
                 print("Fliki 동영상 생성을 진행할 수 없습니다.")
                 return
         else:
@@ -238,7 +233,7 @@ def main():
                 )
                 if video_generated:
                     print(
-                        f"동영상 생성 및 다운로드 프로세스 완료/시작됨. {VIDEO_DIR} 디렉토리를 확인하세요."
+                        f"동영상 생성 및 다운로드 프로세스 완료/시작됨. {RESULT_DIR} 디렉토리를 확인하세요."
                     )
                     # FlikiVideoGenerator의 _wait_and_download_video 에서 다운로드를 처리하고
                     # 최종 다운로드 확인까지 진행합니다.
@@ -247,13 +242,13 @@ def main():
                     print("최종 동영상 파일을 확인합니다...")
                     time.sleep(30)  # 다운로드를 위한 추가 대기 시간 (필요에 따라 조절)
                     latest_video = get_latest_file(
-                        VIDEO_DIR, "mp4"
+                        RESULT_DIR, "mp4"
                     )  # 또는 다른 비디오 확장자
                     if latest_video:
                         print(f"다운로드된 비디오 파일 (추정): {latest_video}")
                     else:
                         print(
-                            f"{VIDEO_DIR} 에서 비디오 파일을 찾지 못했습니다. 수동 확인이 필요할 수 있습니다."
+                            f"{RESULT_DIR} 에서 비디오 파일을 찾지 못했습니다. 수동 확인이 필요할 수 있습니다."
                         )
                 else:
                     print("동영상 생성/다운로드 프로세스에 실패했습니다.")
