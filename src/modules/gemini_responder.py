@@ -213,13 +213,14 @@ class GeminiResponder:
 
         print("\n[답변 생성 중]")
         try:
-            response = self.client.models.generate_content(
+            for chunk in self.client.models.generate_content_stream(
                 model=self.model_name,
                 contents=prompt,
                 config=generation_config,
-            )
-            print("[답변 생성 완료]")
-            return response.text
+            ):
+                print(chunk.text, end="")
+            print("\n[답변 생성 완료]")
+            return chunk.text
         except Exception as e:
             print(f"Error during Google Gen AI API call: {e}")
             return None
