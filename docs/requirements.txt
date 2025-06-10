@@ -3,3 +3,4 @@ python-dotenv==1.1.0
 google-generativeai==0.8.5
 requests==2.32.3
 PyAutoGUI==0.9.54
+yt-dlp==2025.6.10
