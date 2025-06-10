@@ -33,12 +33,23 @@ class VideoToText:
             "outtmpl": os.path.join("data", "audio", "lecture_audio.wav"),
         }
         
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            result_code = ydl.download(youtube_url)
-        
-        if result_code == 0:
-            print("[오디오 다운로드 완료]\n")
-            return True
+        try:
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                # download 메서드는 URL을 리스트 형태로 받는 것이 표준입니다.
+                result_code = ydl.download([youtube_url])
+
+            # 3. 성공(0) 시 파일 경로를, 실패 시 None을 반환하도록 수정
+            if result_code == 0:
+                print("[오디오 다운로드 완료]\n")
+                return True
+            else:
+                print(
+                    f"[오류] 다운로드 중 에러가 발생했습니다. (코드: {result_code})\n"
+                )
+                return None
+        except Exception as e:
+            print(f"[예외 발생] 다운로드 프로세스 중 오류 발생: {e}\n")
+            return None
 
     def get_script(self) -> str:
         print("[스크립트 추출 시작]")
