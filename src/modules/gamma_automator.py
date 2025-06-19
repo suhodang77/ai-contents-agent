@@ -1,15 +1,12 @@
 import time
 import os
-import platform
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException
 from ..utils.selenium_utils import (
     element_click,
     paste_text_to_element,
-    press_shift_tab_multiple_times,
-    press_enter,
+    press_tab_multiple_times,
     chrome_focuse,
 )
 from ..utils.selenium_setup import setup_selenium_driver
@@ -53,13 +50,7 @@ class GammaAutomator:
             if self.chrome_browser_opened_by_script:
                 chrome_focuse(self.driver)
                 time.sleep(5)
-                press_shift_tab_multiple_times(1)
-                press_enter()
-            else:
-                press_shift_tab_multiple_times(9)
-                if platform.system() == "Windows":
-                    press_shift_tab_multiple_times(1)
-                press_enter()
+            press_tab_multiple_times(self.driver, 2)
             return True
         except Exception as _:
             login_complete_indicator_xpath = (
@@ -89,8 +80,8 @@ class GammaAutomator:
 
     def _paste_script_and_continue(self, script):
         """
-        주어진 스크립트를 Gamma의 콘텐츠 영역에 붙여넣고 '계속' 버튼을 클릭하여
-        다음 단계로 진행합니다.
+        페이지 스타일을 설정하고, 주어진 스크립트를 Gamma의 콘텐츠 영역에 붙여넣은 후,
+        '계속' 버튼을 클릭하여 다음 단계로 진행합니다.
 
         내부적으로 사용되는 헬퍼 메서드입니다.
 
@@ -98,26 +89,24 @@ class GammaAutomator:
             script (str): PPT 생성을 위한 텍스트 스크립트.
 
         Returns:
-            bool: 스크립트 붙여넣기 및 계속 진행 성공 여부.
+            bool: 모든 단계가 성공적으로 완료되면 True, 아니면 False.
         """
-        print("1. 스크립트 붙여넣기 및 계속...")
-        content_area_xpath = "/html/body/div[1]/div/div/div/div[1]/div[2]/div[2]/div/div/div[1]/div/div/div/div/div/div"
-        if not paste_text_to_element(self.driver, content_area_xpath, script):
-            print("스크립트 붙여넣기 실패")
-            return False
+        print("새로운 흐름에 따라 스크립트 생성 및 계속 진행을 시작합니다.")
 
-        page_style_dropdown_xpath = "/html/body/div[1]/div/div/div/div[1]/div[2]/div[2]/div/div/div[2]/div/div/div[2]/button"
+        # 1. 페이지 스타일 드롭다운 클릭
+        print("1. 페이지 스타일 드롭다운 클릭...")
+        page_style_dropdown_xpath = "/html/body/div[1]/div/div/div/div[1]/div[2]/div[2]/div/div[1]/div/div/div[2]/button"
         if not element_click(self.driver, page_style_dropdown_xpath):
             print("페이지 스타일 드롭다운 클릭 실패")
             return False
 
+        # 2. 드롭다운 메뉴 중 '일반적' 버튼 클릭
+        print("2. '일반적' 버튼 클릭...")
         general_button_xpath = "/html/body/div[5]/div[1]/div/div/button[2]"
         if not element_click(self.driver, general_button_xpath):
-            print(
-                "XPath 기반 페이지 스타일 '일반적' 버튼 클릭 실패. 텍스트 기반으로 재시도..."
-            )
+            print("XPath 기반 페이지 스타일 '일반적' 버튼 클릭 실패. 텍스트 기반으로 재시도...")
             try:
-                # '일반적' 텍스트를 포함하는 버튼을 찾아서 클릭
+                # '일반적' 텍스트를 포함하는 버튼을 찾아서 클릭 (Fallback 로직)
                 general_button = WebDriverWait(self.driver, 5).until(
                     EC.element_to_be_clickable(
                         (By.XPATH, "//button[contains(., '일반적')]")
@@ -126,61 +115,72 @@ class GammaAutomator:
                 general_button.click()
                 print("텍스트 기반 페이지 스타일 '일반적' 버튼 클릭 성공.")
             except Exception as e:
-                print(f"텍스트 기반 페이지 스타일 '일반적' 버튼 클릭 실패: {e}")
+                print(f"텍스트 기반 페이지 스타일 '일반적' 버튼 클릭도 실패했습니다: {e}")
                 return False
 
-        continue_button_1_xpath = (
-            "/html/body/div[1]/div/div/div/div[1]/div[2]/div[2]/div/div/div[3]/button"
-        )
-        if not element_click(self.driver, continue_button_1_xpath):
-            print("첫 번째 계속 버튼 클릭 실패")
+        # 3. 콘텐츠 영역 클릭 후 스크립트 붙여넣기
+        print("3. 스크립트 붙여넣기...")
+        content_area_xpath = "/html/body/div[1]/div/div/div/div[1]/div[2]/div[2]/div/div[2]/div/div[1]/div/div/div[1]/div/div"
+        if not paste_text_to_element(self.driver, content_area_xpath, script):
+            print("스크립트 붙여넣기 실패")
             return False
-        print("스크립트 붙여넣기 및 계속 완료.")
+
+        # 4. 옵션 버튼 클릭
+        print("4. 옵션 버튼 클릭...")
+        options_button_xpath = "/html/body/div[1]/div/div/div/div[1]/div[2]/div[2]/div/div[2]/div/div[2]/div/div[3]"
+        if not element_click(self.driver, options_button_xpath):
+            print("옵션 버튼 클릭 실패")
+            return False
+
+        # 5. 계속 버튼 클릭
+        print("5. 계속 버튼 클릭...")
+        continue_button_xpath = "/html/body/div[1]/div/div/div/div[1]/div[2]/div[2]/div/div[2]/div/button"
+        if not element_click(self.driver, continue_button_xpath):
+            print("계속 버튼 클릭 실패")
+            return False
+
+        print("모든 단계가 성공적으로 완료되었습니다.")
         return True
 
     def _configure_cards_and_continue(self):
         """
-        카드 설정을 구성하고 (현재는 고정 로직) '계속' 버튼을 클릭하여
+        '자유 형식'을 선택하고, 카드를 추가한 후 '계속' 버튼을 클릭하여
         다음 단계로 진행합니다.
 
         내부적으로 사용되는 헬퍼 메서드입니다.
-        (주의: 카드 수 설정 로직은 UI 변경에 따라 수정이 필요할 수 있습니다.)
 
         Returns:
             bool: 카드 설정 및 계속 진행 성공 여부.
         """
-        print("2. 카드 설정 및 계속...")
-        card_count_button_xpath = "/html/body/div[1]/div/div/div/div[1]/div[4]/div/div[2]/div/div[1]/button[3]"
+        print("2. 카드 설정 및 계속 (신규 흐름 적용)...")
 
-        print("카드 갯수 설정 시도 중...")
-        clicked_successfully_count = 0
-        time.sleep(10)
-        for i in range(8):  # 최대 8번 클릭 시도
-            try:
-                # 요소가 존재하는지 짧은 시간(예: 2초) 동안 확인
-                WebDriverWait(self.driver, 1).until(
-                    EC.presence_of_element_located((By.XPATH, card_count_button_xpath))
-                )
-                # 요소가 존재하면 클릭 시도
-                if element_click(self.driver, card_count_button_xpath):
-                    print(f"  시도 {i + 1}/8: 카드 카운트 버튼 클릭 성공.")
-                    clicked_successfully_count += 1
-                else:
-                    print(f"  시도 {i + 1}/8: 카드 카운트 버튼은 존재하지만 클릭 실패.")
-            except TimeoutException:
-                print(
-                    f"  시도 {i + 1}/8: 카드 카운트 버튼({card_count_button_xpath})을 찾을 수 없어 클릭을 건너뜁니다."
-                )
+        # XPath 변수 선언
+        freestyle_button_xpath = "/html/body/div[1]/div/div/div/div[1]/div[2]/div[3]/div/div/div[2]/div[1]/div[2]/button[1]"
+        add_card_button_xpath = "/html/body/div[1]/div/div/div/div[1]/div[4]/div/div[2]/div/div[1]/button[3]"
+        continue_button_xpath = "/html/body/div[1]/div/div/div/div[1]/div[4]/div/div[2]/div/div[2]/div/button"
 
-        print(
-            f"카드 갯수 설정 완료: 총 {clicked_successfully_count}번 성공적으로 클릭됨."
-        )
-        time.sleep(2)  # 기존 로직의 time.sleep(2) 유지
-
-        continue_button_2_xpath = "/html/body/div[1]/div/div/div/div[1]/div[4]/div/div[2]/div/div[2]/div/button"
-        if not element_click(self.driver, continue_button_2_xpath):
-            print("두 번째 계속 버튼 클릭 실패")
+        # 1. '자유 형식' 버튼 클릭
+        print("1. '자유 형식' 버튼 클릭...")
+        if not element_click(self.driver, freestyle_button_xpath):
+            print("'자유 형식' 버튼 클릭 실패")
             return False
+
+        # 2. 카드 추가 버튼 8번 클릭
+        print("2. 카드 추가 버튼 8번 클릭...")
+        for i in range(8):
+            # element_click 함수는 내부에 대기(wait) 로직을 포함하고 있으므로,
+            # 별도의 time.sleep 이나 WebDriverWait 없이 바로 호출합니다.
+            if not element_click(self.driver, add_card_button_xpath):
+                print(f"  시도 {i + 1}/8: 카드 추가 버튼 클릭 실패")
+                return False
+            print(f"  시도 {i + 1}/8: 카드 추가 버튼 클릭 성공.")
+
+        # 3. 계속 버튼 클릭
+        print("3. '계속' 버튼 클릭...")
+        if not element_click(self.driver, continue_button_xpath):
+            print("'계속' 버튼 클릭 실패")
+            return False
+
         print("카드 설정 및 계속 완료.")
         return True
 
@@ -411,3 +411,5 @@ class GammaAutomator:
 if __name__ == "__main__":
     automator = GammaAutomator()
     automator.login()
+    automator._paste_script_and_continue("test")
+    automator._configure_cards_and_continue()

@@ -233,17 +233,27 @@ def select_dropdown_option(
         return False
 
 
-def press_tab_multiple_times(count):
+def press_tab_multiple_times(driver, count):
     """Press the Tab key multiple times using pyautogui."""
     print(f"Tab 키를 {count}번 누릅니다.")
+    
+    driver.find_element(By.TAG_NAME, "body").click()
+    time.sleep(0.5)
+    
     for _ in range(count):
         pyautogui.press("tab")
         time.sleep(random.randrange(1, 5) / 10)
+    
+    press_enter()
 
 
-def press_shift_tab_multiple_times(count):
+def press_shift_tab_multiple_times(driver, count):
     """Press the Shift + Tab key multiple times using pyautogui."""
     print(f"Shift + Tab 키를 {count}번 누릅니다.")
+
+    driver.find_element(By.TAG_NAME, "body").click()
+    time.sleep(0.5)
+
     for _ in range(count):
         try:
             pyautogui.keyDown("shift")
@@ -254,6 +264,8 @@ def press_shift_tab_multiple_times(count):
         except Exception as e:
             print(f"Shift+Tab 실행 중 오류 발생: {e}")
             pyautogui.keyUp("shift")
+    
+    press_enter()
 
 
 def press_enter():
