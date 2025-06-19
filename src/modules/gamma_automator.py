@@ -291,7 +291,7 @@ class GammaAutomator:
 
         # PDF 생성 완료 상태를 기다립니다.
         current_file_dir = os.path.dirname(os.path.abspath(__file__))
-        download_directory = os.path.join(current_file_dir, "..", "..", "data", "pdfs")
+        download_directory = os.path.join(current_file_dir, "..", "..", "data", "results")
         max_wait_time_for_pdf = 3600  # PDF 생성 대기 시간 (초)
 
         if self._wait_for_new_pdf_in_directory(
