@@ -90,9 +90,16 @@ def setup_selenium_driver(download_subdir: str, start_url: str):
     if platform.system() == "Darwin":
         chrome_path = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
     else:
-        chrome_path = (
+        chrome_path_pf = (
             "C:\\\\Program Files\\\\Google\\\\Chrome\\\\Application\\\\chrome.exe"
         )
+        chrome_path_x86 = (
+            "C:\\\\Program Files (x86)\\\\Google\\\\Chrome\\\\Application\\\\chrome.exe"
+        )
+        if os.path.exists(chrome_path_pf):
+            chrome_path = chrome_path_pf
+        elif os.path.exists(chrome_path_x86):
+            chrome_path = chrome_path_x86
 
     # 포트가 사용 중인지 확인하는 함수
     def is_port_in_use(port: int) -> bool:
