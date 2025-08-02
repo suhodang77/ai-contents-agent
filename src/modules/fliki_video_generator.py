@@ -61,11 +61,11 @@ class FlikiVideoGenerator:
             
             chrome_focuse(self.driver)
             time.sleep(5)
-            press_tab_multiple_times(self.driver, 1)
+            press_tab_multiple_times(self.driver, 11)
             time.sleep(2)
-            # press_tab_multiple_times(self.driver, 2)
+            press_tab_multiple_times(self.driver, 2)
             time.sleep(2)
-            # press_tab_multiple_times(self.driver, 7)
+            press_tab_multiple_times(self.driver, 7)
             return True
         except Exception as _:
             login_complete_indicator_xpath = (
