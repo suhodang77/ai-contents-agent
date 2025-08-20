@@ -1,4 +1,5 @@
 import time
+import pyautogui # pyautogui import 추가
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -58,14 +59,44 @@ class FlikiVideoGenerator:
                 )
             )
             time.sleep(3)
-            
+
             chrome_focuse(self.driver)
             time.sleep(5)
-            press_tab_multiple_times(self.driver, 11)
-            time.sleep(2)
-            press_tab_multiple_times(self.driver, 2)
-            time.sleep(2)
-            press_tab_multiple_times(self.driver, 7)
+
+            # --- 변경된 로그인 키 순서 ---
+            # 1. 탭 3, 엔터
+            for _ in range(3):
+                pyautogui.press("tab")
+                time.sleep(0.2)
+            pyautogui.press("enter")
+            time.sleep(1)
+
+            # 2. 방향키↓ 1, 엔터
+            pyautogui.press("down")
+            time.sleep(0.2)
+            pyautogui.press("enter")
+            time.sleep(1)
+
+            # 3. 탭 1, 엔터
+            pyautogui.press("tab")
+            time.sleep(0.2)
+            pyautogui.press("enter")
+            time.sleep(3)
+
+            # 4. 방향키↓ 2, 엔터
+            for _ in range(2):
+                pyautogui.press("down")
+                time.sleep(0.2)
+            pyautogui.press("enter")
+            time.sleep(1)
+
+            # 5. 탭 2, 엔터
+            for _ in range(2):
+                pyautogui.press("tab")
+                time.sleep(0.2)
+            pyautogui.press("enter")
+            # --- 여기까지 변경 ---
+
             return True
         except Exception as _:
             login_complete_indicator_xpath = (

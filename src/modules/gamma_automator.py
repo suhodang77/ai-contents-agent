@@ -1,5 +1,6 @@
 import time
 import os
+import pyautogui # pyautogui import 추가
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -24,7 +25,7 @@ class GammaAutomator:
             download_subdir="results", start_url="https://gamma.app/create/paste"
         )
         if not self.driver:
-            print("WebDriver 초기화 실패. GammaAutomator 인스턴스 생성 중단.")
+            print("WebDriver 초기화 실패. GammaAutomator 인턴스 생성 중단.")
 
     def login(self):
         """
@@ -46,11 +47,30 @@ class GammaAutomator:
                 )
             )
             time.sleep(3)
-            
+
             if self.chrome_browser_opened_by_script:
                 chrome_focuse(self.driver)
-                time.sleep(5)
-            press_tab_multiple_times(self.driver, 2)
+                time.sleep(1)
+            
+            # --- 변경된 로그인 키 순서 ---
+            # 1. 탭 1
+            pyautogui.press("tab")
+            time.sleep(0.5)
+
+            # 2. 방향키 ↓ 2, 엔터
+            for _ in range(2):
+                pyautogui.press("down")
+                time.sleep(0.2)
+            pyautogui.press("enter")
+            time.sleep(0.5)
+            
+            # 3. 탭 3, 엔터
+            for _ in range(3):
+                pyautogui.press("tab")
+                time.sleep(0.2)
+            pyautogui.press("enter")
+            # --- 여기까지 변경 ---
+
             return True
         except Exception as _:
             login_complete_indicator_xpath = (

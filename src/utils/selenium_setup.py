@@ -152,5 +152,6 @@ def setup_selenium_driver(download_subdir: str, start_url: str):
     driver.execute_script("window.sessionStorage.clear();")
 
     driver.get(start_url)
+    driver.maximize_window() # 이 줄이 추가되었습니다.
 
     return driver, chrome_browser_open
