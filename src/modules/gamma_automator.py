@@ -53,21 +53,22 @@ class GammaAutomator:
                 time.sleep(1)
             
             # --- 변경된 로그인 키 순서 ---
-            # 1. 탭 1
-            pyautogui.press("tab")
-            time.sleep(0.5)
-
-            # 2. 방향키 ↓ 2, 엔터
-            for _ in range(2):
-                pyautogui.press("down")
-                time.sleep(0.2)
-            pyautogui.press("enter")
-            time.sleep(0.5)
-            
-            # 3. 탭 3, 엔터
-            for _ in range(3):
+            # 1. 탭 7
+            for _ in range(7):
                 pyautogui.press("tab")
-                time.sleep(0.2)
+                time.sleep(1)
+
+            # 2. 방향키 ↓ 3, 엔터
+            for _ in range(3):  
+                pyautogui.press("down")
+                time.sleep(1)
+            pyautogui.press("enter")
+            time.sleep(1)
+            
+            # 3. 탭 4, 엔터
+            for _ in range(4):
+                pyautogui.press("tab")
+                time.sleep(1)
             pyautogui.press("enter")
             # --- 여기까지 변경 ---
 
@@ -196,12 +197,18 @@ class GammaAutomator:
             print(f"  시도 {i + 1}/8: 카드 추가 버튼 클릭 성공.")
 
         # 3. 계속 버튼 클릭
-        print("3. '계속' 버튼 클릭...")
-        if not element_click(self.driver, continue_button_xpath):
-            print("'계속' 버튼 클릭 실패")
-            return False
+        # print("3. '계속' 버튼 클릭...")
+        # if not element_click(self.driver, continue_button_xpath):
+        #     print("'계속' 버튼 클릭 실패")
+        #     return False
 
-        print("카드 설정 및 계속 완료.")
+        # print("카드 설정 및 계속 완료.")
+        
+        if not element_click(self.driver, continue_button_xpath, timeout=30):
+            print("PPT 생성 버튼 클릭 실패")
+            return False
+        print("생성 시작 버튼 클릭 완료.")
+                
         return True
 
     def _select_template_and_generate(self):
@@ -215,16 +222,18 @@ class GammaAutomator:
         Returns:
             bool: 생성 시작 버튼 클릭 성공 여부.
         """
-        print("3. 템플릿 선택 및 생성 시작...")
-        print("템플릿 선택 단계 (수동 또는 추가 로직 필요)")
-        time.sleep(5)
+        # 현재 Gamma에서 템플릿을 따로 선택이 아닌 형식을 선택할 때 같이 템플릿을 선택하여 이 과정이 사라짐 따라서 _configure_cards_and_continue의 과정에 통합되었습니다.
 
-        generate_button_xpath = "/html/body/div[1]/div/div/div/div[1]/div[2]/div[2]/div[2]/div[1]/div[1]/div/div[2]/div/div/button"
-        if not element_click(self.driver, generate_button_xpath, timeout=30):
-            print("PPT 생성 버튼 클릭 실패")
-            return False
-        print("생성 시작 버튼 클릭 완료.")
-        return True
+        # print("3. 템플릿 선택 및 생성 시작...")
+        # print("템플릿 선택 단계 (수동 또는 추가 로직 필요)")
+        # time.sleep(5)
+
+        # generate_button_xpath = "/html/body/div[1]/div/div/div/div[1]/div[2]/div[2]/div[2]/div[1]/div[1]/div/div[2]/div/div/button" 
+        # if not element_click(self.driver, continue_button_xpath, timeout=30):
+        #     print("PPT 생성 버튼 클릭 실패")
+        #     return False
+        # print("생성 시작 버튼 클릭 완료.")
+        # return True
 
     def _wait_for_generation(self):
         """
@@ -236,7 +245,7 @@ class GammaAutomator:
         Returns:
             bool: PPT 생성 완료 감지 성공 여부 (시간 초과 시 False).
         """
-        print("4. PPT 생성 완료 대기 중...")
+        print("3. PPT 생성 완료 대기 중...")
         completion_indicator_xpath = "/html/body/div[1]/div/div/div/div/div[2]/div[2]/div/div[2]/div/div/div/div/div[1]/h2"
 
         try:
@@ -265,14 +274,15 @@ class GammaAutomator:
             bool: PDF 내보내기 시작 성공 여부.
         """
         print("5. PDF로 내보내기 시작...")
+        
         more_options_button_xpath = (
-            "/html/body/div[1]/div/div/div/div/div[1]/div[2]/button"
+            "/html/body/div[1]/div/div/div/div/div[1]/div[2]/button "
         )
         if not element_click(self.driver, more_options_button_xpath):
             print("더보기 버튼 클릭 실패")
             return False
 
-        export_button_xpath = "/html/body/div[61]/div/div/div[1]/button[5]"
+        export_button_xpath = "/html/body/div[21]/div/div/div[1]/button[6]"
         if not element_click(self.driver, export_button_xpath):
             try:
                 export_button = WebDriverWait(self.driver, 1).until(
@@ -288,7 +298,7 @@ class GammaAutomator:
                 return False
 
         export_pdf_button_xpath = (
-            "/html/body/div[121]/div[3]/div/section/div/div[2]/div[2]/button[1]"
+            "/html/body/div[86]/div[3]/div/section/div/div[2]/div[2]/button[1]/div[3]"
         )
         if not element_click(self.driver, export_pdf_button_xpath):
             try:
@@ -413,8 +423,8 @@ class GammaAutomator:
             if not self._configure_cards_and_continue():
                 return
 
-            if not self._select_template_and_generate():
-                return
+            # if not self._select_template_and_generate(): # Gamma에서 사라진 과정
+                # return
 
             if not self._wait_for_generation():
                 return
