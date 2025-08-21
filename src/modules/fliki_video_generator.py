@@ -1,5 +1,8 @@
 import time
+import os
 import pyautogui # pyautogui import 추가
+import glob
+import shutil
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -324,13 +327,8 @@ class FlikiVideoGenerator:
 
     def _wait_and_download_video(self):
         """
-        비디오 생성이 완료될 때까지 기다린 후 생성된 비디오를 다운로드합니다.
-
-        비디오 생성 오버레이가 사라질 때까지 최대 10분간 대기합니다.
-        이후 여러 단계의 다운로드 버튼을 클릭하여 다운로드를 시작합니다.
-
-        Returns:
-            bool: 다운로드 프로세스 시작 성공 여부 (실제 파일 다운로드 완료 여부는 아님).
+        비디오 생성이 완료될 때까지 기다린 후 생성된 비디오를 다운로드하고
+        지정된 폴더로 이동시킵니다.
         """
         print("[다운로드 단계 시작]")
 
@@ -389,7 +387,6 @@ class FlikiVideoGenerator:
                     print("오류: 다운로드 버튼 3 직접 클릭 실패.")
                     return False
                 print("다운로드 버튼 3 직접 클릭 성공.")
-                return self._wait_for_final_download_confirmation()
             except TimeoutException:
                 print(
                     f"오류: 다운로드 버튼 3({download_button_3_xpath})도 직접 찾거나 클릭할 수 없음."
@@ -401,31 +398,67 @@ class FlikiVideoGenerator:
                 )
                 return False
 
-        download_button_3_xpath = "/html/body/div[3]/div/div/button[2]"
-        print(f"다운로드 버튼 3 클릭 시도: {download_button_3_xpath}")
-        try:
-            WebDriverWait(self.driver, 20).until(
-                EC.element_to_be_clickable((By.XPATH, download_button_3_xpath))
-            )
-            if not element_click(self.driver, download_button_3_xpath):
-                print("오류: 다운로드 버튼 3 클릭 실패.")
-                return False
-        except TimeoutException:
-            print(
-                f"오류: 다운로드 버튼 3({download_button_3_xpath})을 찾거나 클릭할 수 없음."
-            )
-            print("다운로드 버튼 3 없음. 최종 확인 단계로 이동 시도...")
-
-        final_confirmation_button_xpath = "/html/body/div[2]/div/div[3]/button"
+        final_confirmation_button_xpath = "/html/body/div[2]/div/div[3]/button[2]"
         print(
             f"최종 다운로드 확인 버튼 로딩 대기 및 클릭 시도: {final_confirmation_button_xpath}"
         )
-        return self._wait_for_final_download_confirmation(
-            final_confirmation_button_xpath
-        )
+        try:
+            WebDriverWait(self.driver, 3600).until(
+                EC.element_to_be_clickable((By.XPATH, final_confirmation_button_xpath))
+            )
+            print(f"최종 확인 버튼 ({final_confirmation_button_xpath}) 활성화됨. 클릭합니다.")
+            if not element_click(self.driver, final_confirmation_button_xpath):
+                print(
+                    f"경고: 최종 확인 버튼 ({final_confirmation_button_xpath}) 클릭 실패. 이미 다운로드가 시작되었거나 요소가 사라졌을 수 있습니다."
+                )
+            else:
+                print("최종 확인 버튼 클릭 완료.")
+        except TimeoutException:
+            print(
+                f"오류: 최종 확인 버튼 ({final_confirmation_button_xpath})이 지정된 시간 내에 활성화되지 않음. 다운로드가 이미 시작되었거나 다른 문제가 발생했을 수 있습니다."
+            )
+        except Exception as e:
+            print(f"오류: 최종 확인 버튼 ({final_confirmation_button_xpath}) 처리 중 예상치 못한 오류 발생: {e}")
+        
+        time.sleep(10)  # 다운로드가 완료될 시간을 줌
 
+        current_file_dir = os.path.dirname(os.path.abspath(__file__))
+        download_directory = os.path.join(current_file_dir, "..", "..", "data", "results", "fliki_videos")
+        
+        # 다운로드 디렉토리 생성
+        if not os.path.exists(download_directory):
+            os.makedirs(download_directory)
+
+        # 시스템의 기본 다운로드 폴더에서 가장 최근에 다운로드된 동영상 파일을 찾음
+        downloads_folder = os.path.join(os.path.expanduser('~'), 'Downloads')
+        if not os.path.exists(downloads_folder):
+            print("오류: 시스템의 다운로드 폴더를 찾을 수 없습니다.")
+            return False
+            
+        initial_files = set(glob.glob(os.path.join(downloads_folder, '*.mp4')))
+        
+        new_file_path = None
+        for _ in range(30):  # 최대 30초 대기
+            current_files = set(glob.glob(os.path.join(downloads_folder, '*.mp4')))
+            new_files = current_files - initial_files
+            if new_files:
+                new_file_path = max(new_files, key=os.path.getctime)
+                print(f"새 동영상 파일 감지: {new_file_path}")
+                break
+            time.sleep(1)
+        
+        if not new_file_path:
+            print("오류: 지정된 시간 내에 새 동영상 파일이 다운로드되지 않았습니다.")
+            return False
+        
+        destination_path = os.path.join(download_directory, os.path.basename(new_file_path))
+        shutil.move(new_file_path, destination_path)
+        print(f"파일을 '{destination_path}'(으)로 성공적으로 이동했습니다.")
+        
+        return True
+    
     def _wait_for_final_download_confirmation(
-        self, xpath="/html/body/div[2]/div/div[3]/button"
+        self, xpath="/html/body/div[2]/div/div[3]/button[2]"
     ):
         """
         최종 다운로드 확인 버튼을 기다리고 클릭하는 헬퍼 함수입니다.
@@ -434,7 +467,7 @@ class FlikiVideoGenerator:
 
         Args:
             xpath (str, optional): 클릭할 최종 확인 버튼의 XPath.
-                                    Defaults to "/html/body/div[2]/div/div[3]/button".
+                                    Defaults to "/html/body/div[2]/div/div[3]/button[2]".
 
         Returns:
             bool: 최종 확인 버튼 클릭 (또는 자동 시작으로 인한 성공 추정) 여부.
@@ -462,7 +495,7 @@ class FlikiVideoGenerator:
         except Exception as e:
             print(f"오류: 최종 확인 버튼 ({xpath}) 처리 중 예상치 못한 오류 발생: {e}")
             return False
-
+            
     def generate_video_from_ppt(self, ppt_file_path):
         """
         로그인된 Fliki.ai 세션에서 PPT 파일을 사용하여 비디오 생성 프로세스를 조율합니다.

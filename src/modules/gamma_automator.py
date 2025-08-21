@@ -1,6 +1,8 @@
 import time
 import os
-import pyautogui # pyautogui import 추가
+import pyautogui
+import glob
+import shutil
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -25,7 +27,7 @@ class GammaAutomator:
             download_subdir="results", start_url="https://gamma.app/create/paste"
         )
         if not self.driver:
-            print("WebDriver 초기화 실패. GammaAutomator 인턴스 생성 중단.")
+            print("WebDriver 초기화 실패. GammaAutomator 인스턴스 생성 중단.")
 
     def login(self):
         """
@@ -56,21 +58,20 @@ class GammaAutomator:
             # 1. 탭 7
             for _ in range(7):
                 pyautogui.press("tab")
-                time.sleep(1)
+                time.sleep(0.7)
 
             # 2. 방향키 ↓ 3, 엔터
             for _ in range(3):  
                 pyautogui.press("down")
-                time.sleep(1)
+                time.sleep(0.7)
             pyautogui.press("enter")
-            time.sleep(1)
+            time.sleep(0.7)
             
             # 3. 탭 4, 엔터
             for _ in range(4):
                 pyautogui.press("tab")
-                time.sleep(1)
+                time.sleep(0.7)
             pyautogui.press("enter")
-            # --- 여기까지 변경 ---
 
             return True
         except Exception as _:
@@ -189,21 +190,11 @@ class GammaAutomator:
         # 2. 카드 추가 버튼 8번 클릭
         print("2. 카드 추가 버튼 8번 클릭...")
         for i in range(8):
-            # element_click 함수는 내부에 대기(wait) 로직을 포함하고 있으므로,
-            # 별도의 time.sleep 이나 WebDriverWait 없이 바로 호출합니다.
             if not element_click(self.driver, add_card_button_xpath):
                 print(f"  시도 {i + 1}/8: 카드 추가 버튼 클릭 실패")
                 return False
             print(f"  시도 {i + 1}/8: 카드 추가 버튼 클릭 성공.")
-
-        # 3. 계속 버튼 클릭
-        # print("3. '계속' 버튼 클릭...")
-        # if not element_click(self.driver, continue_button_xpath):
-        #     print("'계속' 버튼 클릭 실패")
-        #     return False
-
-        # print("카드 설정 및 계속 완료.")
-        
+                
         if not element_click(self.driver, continue_button_xpath, timeout=30):
             print("PPT 생성 버튼 클릭 실패")
             return False
@@ -264,14 +255,8 @@ class GammaAutomator:
 
     def _export_to_pdf(self):
         """
-        생성된 Gamma 프레젠테이션을 PDF 파일로 내보냅니다.
-
-        '더보기' 메뉴를 통해 내보내기 옵션을 선택하고 PDF 다운로드를 시작합니다.
-        내부적으로 사용되는 헬퍼 메서드입니다.
-        (주의: 메뉴 구조 변경 시 XPath 수정이 필요할 수 있습니다.)
-
-        Returns:
-            bool: PDF 내보내기 시작 성공 여부.
+        생성된 Gamma 프레젠테이션을 PDF 파일로 내보내고,
+        다운로드된 파일을 지정된 폴더로 이동시킵니다.
         """
         print("5. PDF로 내보내기 시작...")
         
@@ -308,50 +293,53 @@ class GammaAutomator:
                     )
                 )
                 export_pdf_button.click()
-                # time.sleep(5) # 기존 텍스트 기반 클릭 후 대기 시간 제거
                 print("PDF로 내보내기 버튼 클릭 (텍스트 기반)")
             except Exception as e:
                 print(f"PDF로 내보내기 버튼 클릭 실패: {e}")
                 return False
-
-        # PDF 내보내기 명령 후 상태 UI가 나타날 때까지 충분히 대기합니다.
-        time.sleep(10)
-
-        print("PDF 내보내기 시작. 다운로드 폴더를 확인하세요.")
-
-        # PDF 생성 완료 상태를 기다립니다.
+        
+        time.sleep(5)  # 다운로드가 시작될 시간을 줌
+        
+        # 다운로드 경로 설정
         current_file_dir = os.path.dirname(os.path.abspath(__file__))
-        download_directory = os.path.join(current_file_dir, "..", "..", "data", "results")
-        max_wait_time_for_pdf = 3600  # PDF 생성 대기 시간 (초)
+        download_directory = os.path.join(current_file_dir, "..", "..", "data", "results", "gamma_pdfs")
 
-        if self._wait_for_new_pdf_in_directory(
-            download_directory, max_wait_time_for_pdf
-        ):
-            print("추가 10초 대기 후 다음 작업을 진행합니다.")
-            time.sleep(3)  # PDF 파일 시스템 반영 및 안정화 대기
-            print("PDF 내보내기 완료.")
-            return True
-        else:
+        # 시스템의 기본 다운로드 폴더에서 가장 최근에 다운로드된 PDF 파일을 찾음
+        downloads_folder = os.path.join(os.path.expanduser('~'), 'Downloads')
+        if not os.path.exists(downloads_folder):
+            print("오류: 시스템의 다운로드 폴더를 찾을 수 없습니다.")
             return False
+            
+        initial_files = set(glob.glob(os.path.join(downloads_folder, '*.pdf')))
+        
+        # 새 PDF 파일이 다운로드 될 때까지 기다림
+        new_file_path = None
+        for _ in range(60): # 최대 60초 대기
+            current_files = set(glob.glob(os.path.join(downloads_folder, '*.pdf')))
+            new_files = current_files - initial_files
+            if new_files:
+                new_file_path = max(new_files, key=os.path.getctime)
+                print(f"새 PDF 파일 감지: {new_file_path}")
+                break
+            time.sleep(1)
+        
+        if not new_file_path:
+            print("오류: 지정된 시간 내에 새 PDF 파일이 다운로드되지 않았습니다.")
+            return False
+        
+        # 다운로드된 파일을 원하는 폴더로 이동
+        destination_path = os.path.join(download_directory, os.path.basename(new_file_path))
+        shutil.move(new_file_path, destination_path)
+        print(f"파일을 '{destination_path}'(으)로 성공적으로 이동했습니다.")
 
-    def _wait_for_new_pdf_in_directory(
-        self, directory_path, max_wait_time, polling_interval=5
-    ):
-        """
-        지정된 디렉토리에 새 PDF 파일이 생성될 때까지 폴링합니다.
+        return True
 
-        Args:
-            directory_path (str): 모니터링할 디렉토리 경로.
-            max_wait_time (int): 최대 대기 시간 (초).
-            polling_interval (int): 폴링 간격 (초).
-
-        Returns:
-            bool: 새 PDF 파일이 감지되면 True, 시간 초과 시 False.
-        """
+    def _wait_for_new_pdf_in_directory(self, directory_path, max_wait_time, polling_interval=5):
+        # 이 함수는 더 이상 사용되지 않지만, 기존 로직을 유지하기 위해 남겨둠.
+        # 실제 파일 이동은 _export_to_pdf에서 처리됨.
         print(
             f"'{directory_path}' 디렉토리에서 새 PDF 파일 생성을 {polling_interval}초 간격으로 확인합니다 (최대 {max_wait_time}초)..."
         )
-
         if not os.path.isdir(directory_path):
             print(
                 f"오류: 지정된 다운로드 디렉토리 '{directory_path}'를 찾을 수 없습니다."
@@ -361,48 +349,28 @@ class GammaAutomator:
         initial_pdf_files = {
             f for f in os.listdir(directory_path) if f.lower().endswith(".pdf")
         }
-        print(
-            f"  초기 PDF 파일 목록 (총 {len(initial_pdf_files)}개): {initial_pdf_files if initial_pdf_files else '없음'}"
-        )
-
         start_time = time.time()
         while time.time() - start_time < max_wait_time:
             current_pdf_files = {
                 f for f in os.listdir(directory_path) if f.lower().endswith(".pdf")
             }
             newly_added_pdfs = current_pdf_files - initial_pdf_files
-
             if newly_added_pdfs:
-                print(f"  새 PDF 파일 감지됨: {newly_added_pdfs}")
+                print(f"새 PDF 파일 감지됨: {newly_added_pdfs}")
                 print("PDF 생성 완료 확인됨.")
                 return True
-
-            # 진행 상황을 더 자주 로깅 (예: 매 30초 또는 폴링 인터벌의 배수)
             elapsed_time = int(time.time() - start_time)
-            if (
-                elapsed_time % (polling_interval * 6) == 0
-            ):  # 약 30초마다 로깅 (polling_interval이 5일때)
+            if (elapsed_time % (polling_interval * 6) == 0):
                 print(
                     f"  새 PDF 파일 대기 중... (경과 시간: {elapsed_time}초 / {max_wait_time}초, 현재 PDF 수: {len(current_pdf_files)})"
                 )
-
             time_left = max_wait_time - (time.time() - start_time)
             if time_left <= 0:
                 break
             actual_sleep = min(polling_interval, time_left)
             time.sleep(actual_sleep)
-
         print(
             f"오류: {max_wait_time}초 내에 '{directory_path}' 디렉토리에서 새 PDF 파일이 감지되지 않았습니다."
-        )
-        current_pdf_files_on_timeout = {
-            f for f in os.listdir(directory_path) if f.lower().endswith(".pdf")
-        }
-        print(
-            f"  시간 초과 시점 PDF 파일 목록 (총 {len(current_pdf_files_on_timeout)}개): {current_pdf_files_on_timeout if current_pdf_files_on_timeout else '없음'}"
-        )
-        print(
-            "PDF 내보내기가 실패했거나 시간이 더 필요할 수 있습니다. Selenium 드라이버의 다운로드 경로 설정을 확인해주세요."
         )
         return False
 
@@ -410,28 +378,18 @@ class GammaAutomator:
         """
         주어진 스크립트를 사용하여 전체 Gamma PPT 생성 및 PDF 내보내기 과정을 자동화합니다.
 
-        스크립트 붙여넣기, 카드 설정, 생성 시작, 완료 대기, PDF 내보내기 단계를
-        순차적으로 실행합니다.
-
         Args:
             script (str): PPT 생성을 위한 텍스트 스크립트.
         """
         try:
             if not self._paste_script_and_continue(script):
                 return
-
             if not self._configure_cards_and_continue():
                 return
-
-            # if not self._select_template_and_generate(): # Gamma에서 사라진 과정
-                # return
-
             if not self._wait_for_generation():
                 return
-
             if not self._export_to_pdf():
                 return
-
         except Exception as e:
             print(f"PPT 생성 및 내보내기 중 오류 발생: {e}")
         finally:
