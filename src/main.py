@@ -267,7 +267,9 @@ class AICreatorGUI(tk.Tk):
             gamma_automator.create_ppt_from_script(self.new_script)
             
             self._update_progress("   - 생성된 PDF 파일 확인...")
-            self.ppt_path = get_latest_file(RESULT_DIR, "pdf")
+            # 수정: Gamma 결과물 폴더 경로로 변경
+            gamma_pdf_dir = os.path.join(RESULT_DIR, "gamma_pdfs")
+            self.ppt_path = get_latest_file(gamma_pdf_dir, "pdf")
             if not self.ppt_path:
                 messagebox.showerror("오류", "생성된 PDF 파일을 찾을 수 없습니다.")
                 return
@@ -318,7 +320,11 @@ class AICreatorGUI(tk.Tk):
                 return
             
             self._update_progress("   - 동영상 다운로드 대기 중...")
-            self.video_path_label.config(text="동영상 다운로드가 시작되었습니다. 'data/results' 폴더를 확인해주세요.")
+            # 수정: Fliki 결과물 폴더 경로로 변경
+            fliki_video_dir = os.path.join(RESULT_DIR, "fliki_videos")
+            self.video_path = get_latest_file(fliki_video_dir, "mp4")
+
+            self.video_path_label.config(text=f"파일 경로: {self.video_path}")
 
             self.fliki_prompt_text.delete("1.0", tk.END)
             with open(self.fliki_prompt_path, 'r', encoding='utf-8') as f:
@@ -349,5 +355,8 @@ if __name__ == "__main__":
     ensure_dir(RESULT_DIR)
     ensure_dir(AUDIO_DIR)
     ensure_dir(GENERATED_TEXT_DIR)
+    # 수정: Gamma와 Fliki의 새로운 폴더도 생성
+    ensure_dir(os.path.join(RESULT_DIR, "gamma_pdfs"))
+    ensure_dir(os.path.join(RESULT_DIR, "fliki_videos"))
     app = AICreatorGUI()
     app.mainloop()
