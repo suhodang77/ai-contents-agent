@@ -67,8 +67,8 @@ class GammaAutomator:
             pyautogui.press("enter")
             time.sleep(0.7)
             
-            # 3. 탭 4, 엔터
-            for _ in range(4):
+            # 3. 탭 3, 엔터
+            for _ in range(3):
                 pyautogui.press("tab")
                 time.sleep(0.7)
             pyautogui.press("enter")
