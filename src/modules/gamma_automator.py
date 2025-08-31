@@ -261,13 +261,13 @@ class GammaAutomator:
         print("5. PDF로 내보내기 시작...")
         
         more_options_button_xpath = (
-            "/html/body/div[1]/div/div/div/div/div[1]/div[2]/button "
+            "/html/body/div[1]/div/div/div/div/div[1]/div/div[2]/button"
         )
         if not element_click(self.driver, more_options_button_xpath):
             print("더보기 버튼 클릭 실패")
             return False
 
-        export_button_xpath = "/html/body/div[21]/div/div/div[1]/button[6]"
+        export_button_xpath = "/html/body/div[157]/div/div/div[1]/button[6]"
         if not element_click(self.driver, export_button_xpath):
             try:
                 export_button = WebDriverWait(self.driver, 1).until(
@@ -283,7 +283,7 @@ class GammaAutomator:
                 return False
 
         export_pdf_button_xpath = (
-            "/html/body/div[86]/div[3]/div/section/div/div[2]/div[2]/button[1]/div[3]"
+            "/html/body/div[311]/div[3]/div/section/div/div[2]/div[2]/button[1]"
         )
         if not element_click(self.driver, export_pdf_button_xpath):
             try:
