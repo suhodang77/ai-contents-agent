@@ -59,6 +59,11 @@ pip install -r docs/requirements.txt
     이 API 키는 `GeminiResponder` 및 `VideoToText` 모듈에서 사용됩니다.
 
 ## 프로그램 실행 방법
+###  최신 버전-V1.3 실행 설명서 notion 링크
+ https://www.notion.so/suhodang/ai-contents-agent-248cc5b2d34280168f20c2af6f7162d6?source=copy_link
+
+<details>
+<summary><font size="4"><b>V1.0 실행 설명서</font></summary>  
 
 ### 1. 스크립트 실행
 
@@ -104,6 +109,7 @@ python -m src.main
 - 생성된 텍스트 파일(스크립트, 상세페이지): `data/generated_texts/`
 - Gamma에서 생성된 최종 PPT(PDF 형식) 파일: `data/results/`
 - Fliki에서 생성된 최종 동영상(MP4 형식) 파일: `data/results/`
+</details>
 
 ## 프로젝트 구조
 
