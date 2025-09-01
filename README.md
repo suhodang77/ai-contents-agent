@@ -114,8 +114,6 @@ python -m src.main
 ├── data/                     # 데이터 저장용 디렉토리 (자동 생성)
 │   ├── generated_texts/      # AI가 생성한 스크립트, 상세페이지 저장
 │   ├── results/              # 최종 결과물(PPT, 영상) 저장
-│   │   ├── fliki_videos/     # Fliki에서 생성된 최종 동영상(MP4 형식) 저장
-│   │   └── gamma_pdfs/       # Gamma에서 생성된 최종 PPT(PDF 형식) 저장
 │   ├── audio/                # YouTube에서 추출한 음성 파일 저장
 │   └── selenium-dev-profile/ # Selenium용 Chrome 프로필
 ├── docs/
