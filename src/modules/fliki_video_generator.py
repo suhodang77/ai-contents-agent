@@ -377,26 +377,29 @@ class FlikiVideoGenerator:
             print(
                 f"오류: 다운로드 버튼 2({download_button_2_xpath})를 찾거나 클릭할 수 없음."
             )
-            print("다운로드 버튼 3 직접 시도...")
-            download_button_3_xpath = "/html/body/div[3]/div/div/button[2]"
-            try:
-                WebDriverWait(self.driver, 10).until(
-                    EC.element_to_be_clickable((By.XPATH, download_button_3_xpath))
-                )
-                if not element_click(self.driver, download_button_3_xpath):
-                    print("오류: 다운로드 버튼 3 직접 클릭 실패.")
-                    return False
-                print("다운로드 버튼 3 직접 클릭 성공.")
-            except TimeoutException:
-                print(
-                    f"오류: 다운로드 버튼 3({download_button_3_xpath})도 직접 찾거나 클릭할 수 없음."
-                )
+        except Exception as e:
+            print(f"오류: 다운로드 버튼 2({download_button_2_xpath}) 처리 중 예상치 못한 오류 발생: {e}")
+
+        download_button_3_xpath = "/html/body/div[3]/div/div/button[2]"
+        print(f"다운로드 버튼 3 클릭 시도: {download_button_3_xpath}")
+        try:
+            WebDriverWait(self.driver, 10).until(
+                EC.element_to_be_clickable((By.XPATH, download_button_3_xpath))
+            )
+            if not element_click(self.driver, download_button_3_xpath):
+                print("오류: 다운로드 버튼 3 직접 클릭 실패.")
                 return False
-            except Exception as e_direct3:
-                print(
-                    f"오류: 다운로드 버튼 3 직접 클릭 중 예상치 못한 오류 발생: {e_direct3}"
-                )
-                return False
+            print("다운로드 버튼 3 직접 클릭 성공.")
+        except TimeoutException:
+            print(
+                f"오류: 다운로드 버튼 3({download_button_3_xpath})도 직접 찾거나 클릭할 수 없음."
+            )
+            return False
+        except Exception as e_direct3:
+            print(
+                f"오류: 다운로드 버튼 3 직접 클릭 중 예상치 못한 오류 발생: {e_direct3}"
+            )
+            return False
 
         final_confirmation_button_xpath = "/html/body/div[2]/div/div[3]/button[2]"
         print(
@@ -420,7 +423,7 @@ class FlikiVideoGenerator:
         except Exception as e:
             print(f"오류: 최종 확인 버튼 ({final_confirmation_button_xpath}) 처리 중 예상치 못한 오류 발생: {e}")
         
-        time.sleep(10)  # 다운로드가 완료될 시간을 줌
+        time.sleep(15)  # 다운로드가 완료될 시간을 줌
 
         current_file_dir = os.path.dirname(os.path.abspath(__file__))
         download_directory = os.path.join(current_file_dir, "..", "..", "data", "results", "fliki_videos")

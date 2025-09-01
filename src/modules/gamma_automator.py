@@ -117,14 +117,14 @@ class GammaAutomator:
 
         # 1. 페이지 스타일 드롭다운 클릭
         print("1. 페이지 스타일 드롭다운 클릭...")
-        page_style_dropdown_xpath = "/html/body/div[1]/div/div/div/div[1]/div[2]/div[2]/div/div[1]/div/div/div[2]/button"
+        page_style_dropdown_xpath = "/html/body/div[1]/div/div/div/div[1]/div[2]/div[2]/div/div[1]/div/div/div[1]/div/button[1]"
         if not element_click(self.driver, page_style_dropdown_xpath):
             print("페이지 스타일 드롭다운 클릭 실패")
             return False
 
         # 2. 드롭다운 메뉴 중 '일반적' 버튼 클릭
         print("2. '일반적' 버튼 클릭...")
-        general_button_xpath = "/html/body/div[5]/div[1]/div/div/button[2]"
+        general_button_xpath = "/html/body/div[1]/div/div/div/div[1]/div[2]/div[2]/div/div[1]/div/div/div[2]/button"
         if not element_click(self.driver, general_button_xpath):
             print("XPath 기반 페이지 스타일 '일반적' 버튼 클릭 실패. 텍스트 기반으로 재시도...")
             try:
