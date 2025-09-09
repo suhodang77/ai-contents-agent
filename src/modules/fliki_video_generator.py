@@ -147,7 +147,7 @@ class FlikiVideoGenerator:
             print("오류: PPT 버튼 클릭 실패.")
             return False
 
-        user_info_textarea_xpath = "/html/body/div[2]/div/div[2]/div/div[1]/textarea"
+        user_info_textarea_xpath = "/html/body/div[3]/div/div[2]/div/div[1]/textarea"
         print(f"사용자 정보 입력 시도: {user_info_textarea_xpath}")
         try:
             WebDriverWait(self.driver, 15).until(
