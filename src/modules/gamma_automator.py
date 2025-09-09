@@ -302,7 +302,7 @@ class GammaAutomator:
         
         # 다운로드 경로 설정
         current_file_dir = os.path.dirname(os.path.abspath(__file__))
-        download_directory = os.path.join(current_file_dir, "..", "..", "data", "results", "gamma_pdfs")
+        download_directory = os.path.join(current_file_dir, "..", "..", "data", "results")
 
         # 시스템의 기본 다운로드 폴더에서 가장 최근에 다운로드된 PDF 파일을 찾음
         downloads_folder = os.path.join(os.path.expanduser('~'), 'Downloads')

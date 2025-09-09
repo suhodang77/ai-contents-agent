@@ -133,7 +133,6 @@ class FlikiVideoGenerator:
 
         Args:
             ppt_file_path (str): 업로드할 PPT 파일의 경로.
-            user_level_info (str): 사용자 수준 정보 프롬프트.
 
         Returns:
             bool: 업로드 단계 성공 여부.
@@ -147,8 +146,12 @@ class FlikiVideoGenerator:
             print("오류: PPT 버튼 클릭 실패.")
             return False
 
-        user_info_textarea_xpath = "/html/body/div[3]/div/div[2]/div/div[1]/textarea"
-        print(f"사용자 정보 입력 시도: {user_info_textarea_xpath}")
+        # --- ✨ 수정된 부분 ---
+        # 불안정한 Full XPath 대신, 고유한 name 속성을 사용하여 textarea를 찾도록 변경
+        user_info_textarea_xpath = "//textarea[@name='prompt']"
+        print(f"사용자 정보 입력 시도 (name 속성 기반 XPath): {user_info_textarea_xpath}")
+        # --- 여기까지 수정 ---
+
         try:
             WebDriverWait(self.driver, 15).until(
                 EC.presence_of_element_located((By.XPATH, user_info_textarea_xpath))
@@ -173,14 +176,14 @@ class FlikiVideoGenerator:
         print("슬라이더 드래그 시도...")
         slider_drag(
             driver=self.driver,
-            slider_xpath="/html/body/div[2]/div/div[2]/div/div[2]/div/span/span[1]",
-            thumb_xpath="/html/body/div[2]/div/div[2]/div/div[2]/div/span/span[2]/span",
+            slider_xpath="//span[contains(@class, 'track') and @data-orientation='horizontal']",
+            thumb_xpath="//span[@role='slider']",
             target_value=15,
         )
         print("슬라이더 드래그 완료.")
 
-        file_input_xpath = "/html/body/div[2]/div/div[2]/div/div[3]/div/input"
-        print("PPT 파일 업로드 시도...")
+        file_input_xpath = "//input[@class='file-upload-input']"
+        print(f"PPT 파일 업로드 시도: {file_input_xpath}")
         if not upload_file_to_element(
             self.driver,
             trigger_xpath=None,
@@ -192,7 +195,7 @@ class FlikiVideoGenerator:
         print("PPT 파일 업로드 요청 성공.")
         time.sleep(5)
 
-        upload_next_button_xpath = "/html/body/div[2]/div/div[3]/div/div/button"
+        upload_next_button_xpath = "//button[.//span[text()='Next']]"
         print(f"Next 버튼 클릭 시도: {upload_next_button_xpath}")
         try:
             WebDriverWait(self.driver, 120).until(
@@ -218,7 +221,7 @@ class FlikiVideoGenerator:
             bool: 템플릿 건너뛰기 성공 여부.
         """
         print("[단계 2/5: 템플릿]")
-        template_skip_button_xpath = "/html/body/div[2]/div/div[3]/div/div/button[2]"
+        template_skip_button_xpath = "//button[.//span[text()='Skip']]"
         print(f"Skip 버튼 확인 및 클릭 시도: {template_skip_button_xpath}")
         try:
             WebDriverWait(self.driver, 600).until(
@@ -245,7 +248,7 @@ class FlikiVideoGenerator:
             bool: 스타일 단계 건너뛰기 성공 여부.
         """
         print("[단계 3/5: 스타일]")
-        language_select_xpath = "/html/body/div[2]/div/div[2]/div/div[1]/div[1]/select"
+        language_select_xpath = "//select[option[text()='Select language']]"
         print("언어 선택 (Korean) 시도...")
         if not select_dropdown_option(
             self.driver, language_select_xpath, option_text="Korean"
@@ -253,7 +256,7 @@ class FlikiVideoGenerator:
             print("오류: 언어(Korean) 선택 실패.")
             return False
 
-        dialect_select_xpath = "/html/body/div[2]/div/div[2]/div/div[1]/div[2]/select"
+        dialect_select_xpath = "//select[option[text()='Select dialect']]"
         dialect_option_text = "Korea"
         print(f"말투 선택 ({dialect_option_text}) 시도...")
         if not select_dropdown_option(
@@ -263,7 +266,7 @@ class FlikiVideoGenerator:
                 f"경고: 말투 '{dialect_option_text}' 선택 실패. 기본값으로 진행될 수 있음."
             )
 
-        style_skip_button_xpath = "/html/body/div[2]/div/div[3]/div/div/button[2]"
+        style_skip_button_xpath = "//button[.//span[text()='Skip']]"
         print(f"Skip 버튼 클릭 시도: {style_skip_button_xpath}")
         time.sleep(1)
         if not element_click(self.driver, style_skip_button_xpath):
@@ -281,7 +284,7 @@ class FlikiVideoGenerator:
             bool: 스크립트 단계 진행 성공 여부.
         """
         print("[단계 4/5: 스크립트]")
-        script_next_button_xpath = "/html/body/div[2]/div/div[3]/div/div/button[3]"
+        script_next_button_xpath = "//button[.//span[text()='Next']]"
         print(f"Next 버튼 확인 및 클릭 시도: {script_next_button_xpath}")
         try:
             WebDriverWait(self.driver, 60).until(
@@ -308,7 +311,7 @@ class FlikiVideoGenerator:
             bool: 사용자 정의 단계 제출 성공 여부.
         """
         print("[단계 5/5: 사용자 정의]")
-        submit_button_xpath = "/html/body/div[2]/div/div[3]/div/div/button[2]"
+        submit_button_xpath = "//button[.//span[text()='Submit']]"
         print(f"Submit 버튼 확인 및 클릭 시도: {submit_button_xpath}")
         try:
             WebDriverWait(self.driver, 600).until(
@@ -332,7 +335,7 @@ class FlikiVideoGenerator:
         """
         print("[다운로드 단계 시작]")
 
-        generation_overlay_xpath = "/html/body/div[2]/div/div"
+        generation_overlay_xpath = "//div[p[contains(text(), 'Your file is being created')]]" #/html/body/div[2]/div/div
         print(
             f"비디오 생성 완료 대기 중... (오버레이 사라짐 감지: {generation_overlay_xpath})"
         )
@@ -352,7 +355,7 @@ class FlikiVideoGenerator:
 
         time.sleep(3)
 
-        download_button_1_xpath = "/html/body/div/main/div/div/div[1]/nav[2]/button[3]"
+        download_button_1_xpath = "//button[.//span[text()='Download']]" #/html/body/div/main/div/div/div[1]/nav[2]/button[3]
         print(f"다운로드 버튼 1 클릭 시도: {download_button_1_xpath}")
         if not element_click(self.driver, download_button_1_xpath):
             print("오류: 다운로드 버튼 1 클릭 실패.")
@@ -364,7 +367,7 @@ class FlikiVideoGenerator:
                 return False
             print("새로고침 후 다운로드 버튼 1 클릭 성공.")
 
-        download_button_2_xpath = "/html/body/div[2]/div/div[3]/button"
+        download_button_2_xpath = "//button[.//span[text()='Start export']]"  #/html/body/div[2]/div/div[3]/button
         print(f"다운로드 버튼 2 클릭 시도: {download_button_2_xpath}")
         try:
             WebDriverWait(self.driver, 20).until(
@@ -380,7 +383,7 @@ class FlikiVideoGenerator:
         except Exception as e:
             print(f"오류: 다운로드 버튼 2({download_button_2_xpath}) 처리 중 예상치 못한 오류 발생: {e}")
 
-        download_button_3_xpath = "/html/body/div[3]/div/div/button[2]"
+        download_button_3_xpath = "//button[.//span[text()='Start']]"  #/html/body/div[3]/div/div/button[2]
         print(f"다운로드 버튼 3 클릭 시도: {download_button_3_xpath}")
         try:
             WebDriverWait(self.driver, 10).until(
@@ -401,7 +404,7 @@ class FlikiVideoGenerator:
             )
             return False
 
-        final_confirmation_button_xpath = "/html/body/div[2]/div/div[3]/button[2]"
+        final_confirmation_button_xpath = "//button[.//span[text()='Download MP4']]"  #/html/body/div[2]/div/div[3]/button[2]
         print(
             f"최종 다운로드 확인 버튼 로딩 대기 및 클릭 시도: {final_confirmation_button_xpath}"
         )
@@ -426,7 +429,7 @@ class FlikiVideoGenerator:
         time.sleep(15)  # 다운로드가 완료될 시간을 줌
 
         current_file_dir = os.path.dirname(os.path.abspath(__file__))
-        download_directory = os.path.join(current_file_dir, "..", "..", "data", "results", "fliki_videos")
+        download_directory = os.path.join(current_file_dir, "..", "..", "data", "results")
         
         # 다운로드 디렉토리 생성
         if not os.path.exists(download_directory):
@@ -461,7 +464,7 @@ class FlikiVideoGenerator:
         return True
     
     def _wait_for_final_download_confirmation(
-        self, xpath="/html/body/div[2]/div/div[3]/button[2]"
+        self, xpath = "//button[.//span[text()='Download MP4']]"
     ):
         """
         최종 다운로드 확인 버튼을 기다리고 클릭하는 헬퍼 함수입니다.
@@ -470,7 +473,7 @@ class FlikiVideoGenerator:
 
         Args:
             xpath (str, optional): 클릭할 최종 확인 버튼의 XPath.
-                                    Defaults to "/html/body/div[2]/div/div[3]/button[2]".
+                                    Defaults to "//button[.//span[text()='Download MP4']]".
 
         Returns:
             bool: 최종 확인 버튼 클릭 (또는 자동 시작으로 인한 성공 추정) 여부.
