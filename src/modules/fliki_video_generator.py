@@ -436,7 +436,7 @@ class FlikiVideoGenerator:
             os.makedirs(download_directory)
 
         # 시스템의 기본 다운로드 폴더에서 가장 최근에 다운로드된 동영상 파일을 찾음
-        downloads_folder = os.path.join(os.path.expanduser('~'), 'Downloads')
+        downloads_folder = download_directory
         if not os.path.exists(downloads_folder):
             print("오류: 시스템의 다운로드 폴더를 찾을 수 없습니다.")
             return False
