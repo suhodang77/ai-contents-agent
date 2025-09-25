@@ -189,11 +189,11 @@ class GammaAutomator:
 
         # 2. 카드 추가 버튼 8번 클릭
         print("2. 카드 추가 버튼 8번 클릭...")
-        for i in range(8):
+        for i in range(4):
             if not element_click(self.driver, add_card_button_xpath):
-                print(f"  시도 {i + 1}/8: 카드 추가 버튼 클릭 실패")
+                print(f"  시도 {i + 1}/4: 카드 추가 버튼 클릭 실패")
                 return False
-            print(f"  시도 {i + 1}/8: 카드 추가 버튼 클릭 성공.")
+            print(f"  시도 {i + 1}/4: 카드 추가 버튼 클릭 성공.")
                 
         if not element_click(self.driver, continue_button_xpath, timeout=30):
             print("PPT 생성 버튼 클릭 실패")

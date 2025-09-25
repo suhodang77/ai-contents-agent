@@ -146,11 +146,9 @@ class FlikiVideoGenerator:
             print("오류: PPT 버튼 클릭 실패.")
             return False
 
-        # --- ✨ 수정된 부분 ---
         # 불안정한 Full XPath 대신, 고유한 name 속성을 사용하여 textarea를 찾도록 변경
         user_info_textarea_xpath = "//textarea[@name='prompt']"
         print(f"사용자 정보 입력 시도 (name 속성 기반 XPath): {user_info_textarea_xpath}")
-        # --- 여기까지 수정 ---
 
         try:
             WebDriverWait(self.driver, 15).until(
@@ -178,7 +176,7 @@ class FlikiVideoGenerator:
             driver=self.driver,
             slider_xpath="//span[contains(@class, 'track') and @data-orientation='horizontal']",
             thumb_xpath="//span[@role='slider']",
-            target_value=15,
+            target_value=5,
         )
         print("슬라이더 드래그 완료.")
 
