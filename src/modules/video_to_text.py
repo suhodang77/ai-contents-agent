@@ -25,7 +25,7 @@ class VideoToText:
         
     def download_youtube_audio(self, youtube_url: str) -> str:
         ydl_opts = {
-            "format": "worst",
+            "format": "bestaudio",
             "extractaudio": True,
             "overwrites": True,
             "downloader": "aria2c",
