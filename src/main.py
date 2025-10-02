@@ -201,7 +201,7 @@ class AICreatorGUI(tk.Tk):
             self.progress_win.destroy()
         self.destroy()
 
-    def _step1_next(self):
+    def _step1_next(self):  
         try:
             self._update_progress("입력 값 유효성 검사...")
             url = self.youtube_url.get()
@@ -220,7 +220,13 @@ class AICreatorGUI(tk.Tk):
             
             self._update_progress("2. 새로운 동영상 스크립트 생성 시작...")
             script_responder = GeminiResponder(prompt_mode="script", target_audience=self.target_audience.get())
-            self.new_script = script_responder.generate_response(script=original_script)
+            # --- 수정된 부분 ---
+            self.new_script = script_responder.generate_response(
+                script=original_script,
+                lecture_title=self.lecture_title.get(),
+                professor_name=self.professor_name.get()
+            )
+            # --- 여기까지 ---
             if not self.new_script:
                 messagebox.showerror("오류", "새로운 스크립트를 생성하지 못했습니다.")
                 self._hide_progress_window()
@@ -229,10 +235,13 @@ class AICreatorGUI(tk.Tk):
             
             self._update_progress("3. 상세 페이지 생성 시작...")
             detail_responder = GeminiResponder(prompt_mode="detail", target_audience=self.target_audience.get())
+            # --- 수정된 부분 ---
             detail_page_content = detail_responder.generate_response(
                 lecture_title=self.lecture_title.get(),
                 script=self.new_script,
+                professor_name=self.professor_name.get()
             )
+            # --- 여기까지 ---
             if not detail_page_content:
                 messagebox.showerror("오류", "상세 페이지 내용을 생성하지 못했습니다.")
                 self._hide_progress_window()
