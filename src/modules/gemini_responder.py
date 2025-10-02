@@ -83,7 +83,7 @@ class GeminiResponder:
     def __init__(
         self,
         api_key=None,
-        model_name="gemini-1.5-flash-latest",
+        model_name="gemini-2.5-flash",  
         temperature=1.0,
         top_p=0.95,
         top_k=64,
@@ -96,8 +96,8 @@ class GeminiResponder:
 
         Args:
             api_key (str, optional): Google API 키. Defaults to None. 환경 변수 `GOOGLE_API_KEY` 또는 `GEMINI_API_KEY`에서 로드됩니다.
-            model_name (str, optional): 사용할 Gemini 모델의 이름. Defaults to "gemini-1.5-flash-latest".
-            temperature (float, optional): 생성 다양성을 제어하는 값 (0.0 ~ 1.0). Defaults to 1.0.
+                model_name (str, optional): 사용할 Gemini 모델의 이름. Defaults to "gemini-2.5-flash".
+                temperature (float, optional): 생성 다양성을 제어하는 값 (0.0 ~ 1.0). Defaults to 1.0.
             top_p (float, optional): 다음 토큰을 선택할 때 고려할 확률 질량의 비율. Defaults to 0.95.
             top_k (int, optional): 다음 토큰을 선택할 때 고려할 상위 토큰의 개수. Defaults to 64.
             max_output_tokens (int, optional): 생성할 최대 토큰 수. Defaults to 8192.
@@ -135,8 +135,9 @@ class GeminiResponder:
             self.target_audience = target_audience
 
         try:
-            genai.configure(api_key=api_key)
-            self.model = genai.GenerativeModel(self.model_name)
+            # genai.configure(api_key=api_key) # 이 줄을 제거합니다.
+            self.client = genai.Client(api_key=api_key) # genai.Client 인스턴스를 추가합니다.
+            # self.model = self.client.models.GenerativeModel(self.model_name) # client를 통해 model을 초기화합니다.
         except Exception as e:
             raise ValueError(f"Error initializing Google Gen AI Client: {e}")
 
@@ -204,25 +205,22 @@ class GeminiResponder:
         print("\n[Google Gen AI SDK 프롬프트]")
         # print(prompt) # 너무 길어서 주석 처리
 
-        generation_config = types.GenerationConfig(
-            temperature=self.temperature,
-            top_p=self.top_p,
-            top_k=self.top_k,
-            max_output_tokens=self.max_output_tokens,
-        )
-
+        generation_config = {
+            "temperature": self.temperature,
+            "top_p": self.top_p,
+            "top_k": self.top_k,
+            "max_output_tokens": self.max_output_tokens,
+        }
+        
         if self.system_instruction:
-            # 최신 SDK에서는 system_instruction이 GenerativeModel 생성자에 전달됩니다.
-            # self.model.system_instruction = self.system_instruction # 이 방식은 더 이상 사용되지 않음
             pass
-
 
         print("\n[답변 생성 중]")
         try:
-            response = self.model.generate_content(
+            response = self.client.models.generate_content_stream(
+                model=self.model_name,
                 contents=prompt,
-                generation_config=generation_config,
-                stream=True,
+                config=generation_config, # 딕셔너리 형태의 config를 전달
             )
             response_parts = []
             for chunk in response:

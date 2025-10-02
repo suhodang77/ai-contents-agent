@@ -8,7 +8,7 @@ load_dotenv()
 
 
 class VideoToText:
-    def __init__(self, api_key=None, model_name: str = "gemini-2.5-flash-preview-05-20"):
+    def __init__(self, api_key=None, model_name: str = "gemini-2.5-flash"): # 모델 이름 수정
         if api_key:
             self.api_key = api_key
         else:
