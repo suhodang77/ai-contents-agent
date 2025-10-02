@@ -172,11 +172,20 @@ class FlikiVideoGenerator:
             print("경고: 사용자 정보 입력 실패. 계속 진행합니다.")
 
         print("슬라이더 드래그 시도...")
+        # 학습 대상자에 따라 비디오 길이(분) 결정
+        if self.target_audience == "초등학생":
+            target_video_length = 6
+        elif self.target_audience == "중학생":
+            target_video_length = 8
+        else: # 고등학생, 일반인
+            target_video_length = 11
+
+        print(f"학습 대상자({self.target_audience})에 맞춰 슬라이더 드래그 시도 (목표 길이: {target_video_length}분)...")
         slider_drag(
             driver=self.driver,
             slider_xpath="//span[contains(@class, 'track') and @data-orientation='horizontal']",
             thumb_xpath="//span[@role='slider']",
-            target_value=5,
+            target_value=target_video_length,
         )
         print("슬라이더 드래그 완료.")
 

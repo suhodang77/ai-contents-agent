@@ -10,7 +10,6 @@ from .modules.gemini_responder import GeminiResponder
 from .modules.gamma_automator import GammaAutomator
 from .modules.fliki_video_generator import FlikiVideoGenerator
 
-# 기존 main.py의 상수와 함수들을 그대로 사용
 DATA_DIR = "data"
 GENERATED_TEXT_DIR = os.path.join(DATA_DIR, "generated_texts")
 RESULT_DIR = os.path.join(DATA_DIR, "results")
@@ -113,8 +112,9 @@ class AICreatorGUI(tk.Tk):
         ttk.Label(frame, text="학습 대상자:").pack(pady=5, anchor="w")
         audience_frame = ttk.Frame(frame)
         audience_frame.pack(fill="x", pady=2)
-        for audience in ["초등학생", "중학생", "일반인"]:
-            ttk.Radiobutton(audience_frame, text=audience, variable=self.target_audience, value=audience).pack(side="left", padx=5)
+        for audience in ["초등학생", "중학생", "고등학생", "일반인"]:
+            ttk.Radiobutton(audience_frame, text=audience, variable=self.target_audience, value=audience).pack(
+                side="left", padx=5)
 
         ttk.Button(frame, text="다음", command=lambda: self._run_in_thread(self._step1_next)).pack(pady=20, fill="x")
 
@@ -260,7 +260,7 @@ class AICreatorGUI(tk.Tk):
     def _step2_next(self):
         try:
             self._update_progress("4. Gamma를 사용하여 PPT 생성 시작...")
-            gamma_automator = GammaAutomator()
+            gamma_automator = GammaAutomator(target_audience=self.target_audience.get())
             
             self._update_progress("   - Gamma 로그인 대기 중...")
             if not gamma_automator.login():

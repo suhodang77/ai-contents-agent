@@ -16,18 +16,17 @@ from ..utils.selenium_setup import setup_selenium_driver
 
 
 class GammaAutomator:
-    def __init__(self):
+    def __init__(self, target_audience="일반인"):
         """
         GammaAutomator 클래스를 초기화합니다.
-
-        Selenium WebDriver를 설정하고 Gamma 웹사이트의 '텍스트 붙여넣기' 페이지로 이동합니다.
-        WebDriver 초기화에 실패하면 오류 메시지를 출력합니다.
         """
         self.driver, self.chrome_browser_opened_by_script = setup_selenium_driver(
             download_subdir="results", start_url="https://gamma.app/create/paste"
         )
         if not self.driver:
             print("WebDriver 초기화 실패. GammaAutomator 인스턴스 생성 중단.")
+
+        self.target_audience = target_audience
 
     def login(self):
         """
@@ -188,13 +187,22 @@ class GammaAutomator:
             return False
 
         # 2. 카드 추가 버튼 8번 클릭
-        print("2. 카드 추가 버튼 8번 클릭...")
-        for i in range(4):
+        print("2. 카드 추가 버튼 클릭...")
+        # 학습 대상자에 따라 카드 추가 횟수 결정 (PPT 분량 조절)
+        if self.target_audience == "초등학생":
+            card_clicks = 5  # 약 5분 분량
+        elif self.target_audience == "중학생":
+            card_clicks = 7  # 약 7분 분량
+        else:  # 고등학생, 일반인
+            card_clicks = 9  # 약 10분 분량
+
+        print(f"학습 대상자({self.target_audience})에 맞춰 카드 {card_clicks}번 추가...")
+        for i in range(card_clicks):
             if not element_click(self.driver, add_card_button_xpath):
-                print(f"  시도 {i + 1}/4: 카드 추가 버튼 클릭 실패")
+                print(f"  시도 {i + 1}/{card_clicks}: 카드 추가 버튼 클릭 실패")
                 return False
-            print(f"  시도 {i + 1}/4: 카드 추가 버튼 클릭 성공.")
-                
+            print(f"  시도 {i + 1}/{card_clicks}: 카드 추가 버튼 클릭 성공.")
+
         if not element_click(self.driver, continue_button_xpath, timeout=30):
             print("PPT 생성 버튼 클릭 실패")
             return False
