@@ -1,6 +1,6 @@
 selenium==4.33.0
 python-dotenv==1.1.0
-google-genai==1.21.1
+google-genai==1.40.0
 requests==2.32.3
 PyAutoGUI==0.9.54
 yt-dlp==2025.6.9
