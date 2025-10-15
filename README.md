@@ -37,7 +37,7 @@ cd ai-contents-agent
 - **Windows:**
 
     ```bash
-    python -m venv .venv
+    py -m venv .venv
     .\.venv\Scripts\activate
     ```
 
